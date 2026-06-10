@@ -1,33 +1,36 @@
-#Enumeración #correo-electronico
+# Enumeración de Correos Electrónicos
 
-# Búsquedas de correos
+Herramientas para descubrir y validar direcciones de correo electrónico asociadas a un dominio o persona. Útiles en la fase de reconocimiento pasivo (OSINT).
 
-A continuación, se proporcionan los enlaces a las herramientas online:
+---
 
-- Hunter: [https://hunter.io/](https://hunter.io/)
-- Intelligence X: [https://intelx.io/](https://intelx.io/)
-- Phonebook.cz: [https://phonebook.cz/](https://phonebook.cz/)
-- Clearbit Connect: [Chrome Extension](https://chrome.google.com/webstore/detail/clearbit-connect-free-ver/pmnhcgfcafcnkbengdcanjablaabjplo)
+## Herramientas de búsqueda
 
-## Phonebook.cz
+### Hunter.io
+Busca correos electrónicos asociados a un dominio. Muestra el patrón de formato que usa la empresa (p.ej. `nombre.apellido@empresa.com`) y los correos encontrados en fuentes públicas.
 
-Buscador de correos electrónicos, dominios, URLs de forma gratuita.
+- [hunter.io](https://hunter.io/) — Plan gratuito con búsquedas limitadas
 
-## Intelligence X (PRO)
+### Phonebook.cz
+Buscador gratuito de correos electrónicos, dominios y URLs. Sin registro.
 
-Es un buscador muy potente, lo malo que es de pago y no es barato.
+- [phonebook.cz](https://phonebook.cz/) — Gratuito
 
-## Hunter.io
+### Intelligence X
+Buscador avanzado que indexa fuentes de datos filtradas, dark web y archivos históricos. Muy potente pero de pago.
 
-Buscador de correos electrónicos. Es poco potente pero puede ser verdaderamente útil.
+- [intelx.io](https://intelx.io/) — De pago
 
-## Clearbit Connect
+### Clearbit Connect
+Extensión de Chrome que busca perfiles de empleados de una empresa filtrando por rol, con enlaces a redes sociales.
 
-Addont para chrome que te busca con un filtrado de rol los perfiles de usuarios con sus redes sociales.
+- [Chrome Web Store — Clearbit Connect](https://chrome.google.com/webstore/detail/clearbit-connect-free-ver/pmnhcgfcafcnkbengdcanjablaabjplo) — Gratuito
 
+---
 
-# Validación de correos
+## Validación de correos
 
-Herramientas que validan si el correo es válido o no
-- www.verifyemailaddress.org
-- email-checker.net/validate
+Antes de usar una lista de correos en un ataque (phishing, password spray), conviene validar cuáles existen realmente.
+
+- [verifyemailaddress.org](https://www.verifyemailaddress.org)
+- [email-checker.net/validate](https://email-checker.net/validate)
