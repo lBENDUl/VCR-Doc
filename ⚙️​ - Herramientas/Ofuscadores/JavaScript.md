@@ -1,150 +1,98 @@
-#Ofuscación [[0️⃣​ - JavaScript Deobfuscation]] 
+# JavaScript — Ofuscación y Deofuscación
 
-Consola:
-https://jsconsole.com/
+Cuando se analiza una aplicación web, el código JavaScript del cliente puede estar ofuscado o minimizado para dificultar su lectura. Entender cómo revertirlo es esencial en análisis de código, bug bounty y CTFs.
 
-# Ofuscación
+---
 
-## Minimizador de código
+## Herramientas de referencia
 
-Muchas herramientas pueden ayudarnos a minimizar el código JavaScript, como [javascript-minificador](https://javascript-minifier.com/). Simplemente copiamos nuestro código y hacemos clic `Minify`y obtenemos la salida minificada a la derecha.
+- Consola online: [jsconsole.com](https://jsconsole.com/)
+- Ofuscador avanzado: [obfuscator.io](https://obfuscator.io/)
+- Desofuscador: [matthewfl.com/unPacker.html](https://matthewfl.com/unPacker.html)
+- Beautifier: [beautifier.io](https://beautifier.io/) / [prettier.io](https://prettier.io/playground/)
 
-## Ofuscadores
+---
 
-Ofusquemos nuestra línea de código para que sea más oscura y difícil de leer. Primero, lo intentaremos [EmbellecerHerramientas](http://beautifytools.com/javascript-obfuscator.php) para ofuscar nuestro código
+## Ofuscación
 
->**NOTA**
->El tipo anterior de ofuscación se conoce como "embalaje", que generalmente es reconocible a partir de los seis argumentos de función utilizados en la función inicial "function(p,a,c,k,e,d)".
+### Minimización
 
-Otros:
--  [JJ Codificar](https://utf-8.jp/public/jjencode.html) 
-- [Codificación AA](https://utf-8.jp/public/aaencode.html)
+Elimina espacios, saltos de línea y renombra variables para reducir el tamaño. Herramienta: [javascript-minifier.com](https://javascript-minifier.com/).
 
-## Ofuscador Avanzado
+### Ofuscadores básicos
 
-Visitamos [https://obfuscator.io](https://obfuscator.io/). Antes de hacer clic `obfuscate`, cambiaremos `String Array Encoding` a `Base64`, como se ve a continuación:
+- [BeautifyTools JS Obfuscator](http://beautifytools.com/javascript-obfuscator.php) — produce el patrón `function(p,a,c,k,e,d)` conocido como *packing*
+- [JJEncode](https://utf-8.jp/public/jjencode.html)
+- [AAEncode](https://utf-8.jp/public/aaencode.html)
 
-   
+### Ofuscación avanzada con obfuscator.io
 
-![](https://academy.hackthebox.com/storage/modules/41/js_deobf_obfuscator_2.jpg)
+1. Ir a [obfuscator.io](https://obfuscator.io/)
+2. Cambiar `String Array Encoding` a `Base64`
+3. Pegar el código y pulsar `Obfuscate`
 
+---
 
-# Desofuscación
+## Deofuscación
 
-## Beautify
+### Beautify desde el navegador
 
-Vemos que el código actual que tenemos está escrito en una sola línea. Esto se conoce como `Minified JavaScript` código. Para formatear correctamente el código, necesitamos `Beautify` nuestro código. El método más básico para hacerlo es a través de nuestro `Browser Dev Tools`.
+En Firefox: `F12 → Depurador → seleccionar el script → botón { }` (Pretty Print).
 
-Por ejemplo, si estábamos usando Firefox, podemos abrir el depurador del navegador con [ `CTRL+SHIFT+Z` ], y luego haga clic en nuestro script `secret.js`. Esto mostrará el script en su formato original, pero podemos hacer clic en el '`{ }`' botón en la parte inferior, que hará `Pretty Print` el script en su formato JavaScript adecuado.
+### UnPacker
 
-Además, podemos utilizar muchas herramientas en línea o complementos de editor de código, como [Prettier](https://prettier.io/playground/) o [Embellecer](https://beautifier.io/). Copiemos el `secret.js` guión
+Para código empaquetado con el patrón `function(p,a,c,k,e,d)`:
 
-## Deobfuscate
+1. Abrir [matthewfl.com/unPacker.html](https://matthewfl.com/unPacker.html)
+2. Pegar el código ofuscado
+3. Clic en `UnPack`
 
-Una buena herramienta es [Desempaquetador](https://matthewfl.com/unPacker.html). Intentemos copiar nuestro código ofuscado anterior y ejecutarlo en UnPacker haciendo clic en `UnPack` botón.
+> ⚠️ No dejar espacios al inicio del código o no funcionará correctamente.
 
->**NOTA**
->Cuidado de dejar espacios antes del código ya que no funcionara correctamente.
+---
 
-# Codificación en respuesta API
+## Codificación en respuestas de API
 
-Cubriremos 3 de los métodos de codificación de texto más utilizados:
+Las APIs y el código JS suelen codificar datos. Las tres más habituales:
 
-## Base64
+### Base64
 
-`base64` la codificación se utiliza generalmente para reducir el uso de caracteres especiales, como cualquier caracteres codificados en `base64` se representaría en caracteres alfanuméricos, además de `+` y `/` sólo. Independientemente de la entrada, incluso si está en formato binario, la cadena codificada base64 resultante solo los usaría.
+```bash
+# Codificar
+echo "https://ejemplo.com" | base64
 
-#### Base64 Codificar
-
-Para codificar cualquier texto en `base64` en Linux, podemos hacer eco y canalizarlo con '`|`' a `base64`:
-
-```shell-session
-vcrdcr@htb[/htb]$ echo https://www.hackthebox.eu/ | base64
-
-aHR0cHM6Ly93d3cuaGFja3RoZWJveC5ldS8K
+# Decodificar
+echo "aHR0cHM6Ly9lamVtcGxvLmNvbQo=" | base64 -d
 ```
 
-#### Decodificación Base64
+Reconocible por el alfabeto alfanumérico + `+`, `/` y padding con `=`.
 
-Si queremos decodificar alguna `base64` cadena codificada, podemos usar `base64 -d`, como sigue:
+### Hex
 
-  Decodificación
+```bash
+# Codificar
+echo "https://ejemplo.com" | xxd -p
 
-```shell-session
-vcrdcr@htb[/htb]$ echo aHR0cHM6Ly93d3cuaGFja3RoZWJveC5ldS8K | base64 -d
-
-https://www.hackthebox.eu/
+# Decodificar
+echo "68747470733a2f2f..." | xxd -p -r
 ```
 
-## Hex
+Reconocible porque solo contiene caracteres `0-9` y `a-f`.
 
-Otro método de codificación común es `hex` codificación, que codifica cada carácter en su `hex` orden en el `ASCII` mesa. Por ejemplo, `a` es `61` en hex, `b` es `62`, `c` es `63`y así sucesivamente. Puedes encontrar el completo `ASCII` tabla en Linux usando el `man ascii` comando.
+### ROT13
 
-#### Manchado Hex
+```bash
+# Codificar
+echo "https://ejemplo.com" | tr 'A-Za-z' 'N-ZA-Mn-za-m'
 
-Cualquier cadena codificada en `hex` estaría compuesto solo de caracteres hexagonales, que son solo 16 caracteres: 0-9 y a-f. Eso hace que detectar `hex` cadenas codificadas tan fáciles como detectar `base64` cadenas codificadas.
-
-#### Codificar Hex
-
-Para codificar cualquier cadena en `hex` en Linux, podemos usar el `xxd -p` comando:
-
-  Codificación
-
-```shell-session
-vcrdcr@htb[/htb]$ echo https://www.hackthebox.eu/ | xxd -p
-
-68747470733a2f2f7777772e6861636b746865626f782e65752f0a
+# Decodificar (misma operación)
+echo "uggcf://rwhzcbe.pbz" | tr 'A-Za-z' 'N-ZA-Mn-za-m'
 ```
 
-#### Decodificar Hex
+También disponible en: [rot13.com](https://rot13.com/)
 
-Para decodificar a `hex` cadena codificada, podemos utilizar el `xxd -p -r` comando:
+---
 
-  Decodificación
+## Identificar el tipo de codificación
 
-```shell-session
-vcrdcr@htb[/htb]$ echo 68747470733a2f2f7777772e6861636b746865626f782e65752f0a | xxd -p -r
-
-https://www.hackthebox.eu/
-```
-
-
-## César/Rot13
-
-Otra técnica de codificación común y muy antigua es un cifrado César, que cambia cada letra por un número fijo. Por ejemplo, cambiar por 1 caracter hace `a` convertirse `b`, y `b` convertirse `c`y así sucesivamente. Muchas variaciones del cifrado César utilizan un número diferente de cambios, el más común de los cuales es `rot13`, que cambia cada carácter 13 veces hacia adelante.
-
-#### Viendo César/Rot13
-
-A pesar de que este método de codificación hace que cualquier texto parezca aleatorio, todavía es posible detectarlo porque cada carácter se asigna a un carácter específico. Por ejemplo, en `rot13`, `http://www` convertirse `uggc://jjj`, que todavía tiene algunas semejanzas y puede ser reconocido como tal.
-
-#### Rot13 Codificar
-
-No hay un comando específico en Linux para hacer `rot13` codificación. Sin embargo, es bastante fácil crear nuestro propio comando para hacer el cambio de personaje:
-
-  Codificación
-
-```shell-session
-vcrdcr@htb[/htb]$ echo https://www.hackthebox.eu/ | tr 'A-Za-z' 'N-ZA-Mn-za-m'
-
-uggcf://jjj.unpxgurobk.rh/
-```
-
-#### Rot13 Decodificar
-
-Podemos usar el mismo comando anterior para decodificar rot13 también:
-
-  Decodificación
-
-```shell-session
-vcrdcr@htb[/htb]$ echo uggcf://jjj.unpxgurobk.rh/ | tr 'A-Za-z' 'N-ZA-Mn-za-m'
-
-https://www.hackthebox.eu/
-```
-
-Otra opción para codificar/descodificar rot13 sería usar una herramienta en línea, como [rot13](https://rot13.com/).
-
-
-# Identificación de codificación
-
-Algunas herramientas pueden ayudarnos a determinar automáticamente el tipo de codificación, como [Identificador de Cifrado](https://www.boxentriq.com/code-breaking/cipher-identifier). Pruebe las cadenas codificadas anteriores con [Identificador de Cifrado](https://www.boxentriq.com/code-breaking/cipher-identifier), para ver si puede identificar correctamente el método de codificación.
-
+Si no está claro qué codificación se está usando: [Cipher Identifier — boxentriq.com](https://www.boxentriq.com/code-breaking/cipher-identifier)
