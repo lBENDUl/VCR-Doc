@@ -1,405 +1,334 @@
+# Guía Completa de Nmap
+## Enumeración y Reconocimiento de Redes
 
-#Enumeración #Linux #Windows
+**Versión 1.0 - Junio 2024**
 
+---
 
+## Introducción
 
-![[NMAP.png]]
+Nmap (Network Mapper) es una herramienta de código abierto fundamental en el arsenal de cualquier profesional de seguridad informática. Permite realizar reconocimiento de redes, identificar hosts activos, descubrir puertos abiertos y determinar servicios en ejecución. Esta guía proporciona un enfoque profesional para dominar Nmap, desde los conceptos básicos hasta técnicas avanzadas de evasión.
 
+El objetivo de este documento es servir como referencia práctica y técnica para profesionales de ciberseguridad durante auditorías de seguridad, pruebas de penetración y evaluaciones de vulnerabilidades.
 
-# Parámetros básicos
+---
 
-## Pn
+## Tabla de Contenidos
 
-Escaneo que no comprueba si los hots están corriendo o no.
-Establece que todos los hots están encendidos, por lo tanto evita una comprobación por lo que hace más rápido el escaneo.
+1. [Parámetros Básicos](#parámetros-básicos)
+2. [Técnicas de Evasión de Firewalls e IDS](#técnicas-de-evasión-de-firewalls-e-ids)
+3. [Scripts NSE (Nmap Scripting Engine)](#scripts-nse-nmap-scripting-engine)
+4. [Herramientas Complementarias de Enumeración](#herramientas-complementarias-de-enumeración)
+5. [Workflow Práctico](#workflow-práctico-escaneo-completo)
+6. [Mejores Prácticas](#mejores-prácticas)
 
-## n
-Hace que el escaneo no haga resolución DNS, por lo que será más rápido.
+---
 
-## T[0-5]
-Dependiendo del número que se le asigne, el escaneo será más rápido.
-0 es el más lento y a la vez el más sigiloso.
-5 es el más rápido y a la vez el más bestia.
+## Parámetros Básicos
 
-## sS
-Es el escaneo el cual no realiza three-way handsake ya que realiza el siguiente patrón de paquetes:
-(SYN) -> (SYN/ACK) -> (RST)
+Los parámetros básicos de Nmap forman la base para cualquier escaneo. Comprender cómo funcionan permite construir comandos más complejos y efectivos, adaptados a diferentes escenarios y objetivos de seguridad.
 
-Esto hace que el escaneo sea más rápido y a su vez más sigiloso ya que no establece una conexión con la máquina victima.
+### -Pn (No realizar ping)
 
-## sT
-Es el escaneo por defecto que hace nmap para el protocolo TCP. Hace el three-way handsake completo estableciendo conexión con la máquina
+Este parámetro desactiva el descubrimiento de hosts y asume que todos los objetivos están en línea. Es útil cuando los firewalls bloquean solicitudes ICMP (ping). Acelera significativamente el escaneo al evitar la fase de descubrimiento.
 
-## sn
-Escaneo al segmento de red para ver que host estan conectados.
-
-```
-nmap -sn 192.168.111.0/24
-```
-
-## 0
-
-Detecta que sistema operativo tiene la maquina victima.
-**No es recomendable ya que realiza muchas comprobaciones**
-
-
-## sV
-Escaneo que detecta lo que contiene cada puerto que esta abierto con sus versiones.
-
-## b
-El `Nmap` la bandera -B se puede utilizar para realizar un ataque de rebote FTP:
-
-```shell-session
-nmap -Pn -v -n -p80 -b anonymous:password@10.10.110.213 172.17.0.2
+```bash
+nmap -Pn 192.168.1.100
 ```
 
-# Evasión de Firewalls/IDS
+### -n (Sin resolución DNS)
 
-Cuando se realizan pruebas de penetración, uno de los mayores desafíos es evadir la detección de los **Firewalls**, que son diseñados para proteger las redes y sistemas de posibles amenazas. Para superar este obstáculo, Nmap ofrece una variedad de técnicas de evasión que permiten a los profesionales de seguridad realizar escaneos sigilosos y evitar así la detección de los mismos.
+Desactiva la resolución inversa de DNS para las direcciones IP. Mejora significativamente la velocidad del escaneo, especialmente en redes grandes, evitando consultas DNS que pueden ser bloqueadas o ralentizar el proceso.
 
-Algunos de los parámetros vistos en esta clase son los siguientes:
+```bash
+nmap -n 192.168.1.0/24
+```
 
-## MTU (–mtu)
+### -T[0-5] (Control de Velocidad del Escaneo)
 
-La técnica de evasión de **MTU** o “**Maximum Transmission Unit**” implica ajustar el tamaño de los paquetes que se envían para evitar la detección por parte del Firewall. Nmap permite configurar manualmente el tamaño máximo de los paquetes para garantizar que sean lo suficientemente pequeños para pasar por el Firewall sin ser detectados.
+Este parámetro controla la agresividad del escaneo. Los valores van de 0 (paranoico, muy sigiloso) a 5 (insano, muy agresivo). La elección depende del entorno y objetivos de seguridad.
 
-## Data Length (–data-length)
+| Nivel | Nombre | Descripción |
+|-------|--------|-------------|
+| T0 | Paranoid | Muy lento, máximo sigilo |
+| T1 | Sneaky | Lento, muy sigiloso |
+| T2 | Polite | Velocidad reducida |
+| T3 | Normal | Equilibrio (por defecto) |
+| T4 | Aggressive | Muy rápido |
+| T5 | Insane | Muy agresivo, puede causar pérdida de paquetes |
 
-Esta técnica se basa en ajustar la **longitud de los datos** enviados para que sean lo suficientemente cortos como para pasar por el Firewall sin ser detectados. Nmap permite a los usuarios configurar manualmente la longitud de los datos enviados para que sean lo suficientemente pequeños para evadir la detección del Firewall.
+### -sS (SYN Scan - Escaneo Sigiloso)
 
+También conocido como "half-open scan", no completa el three-way handshake de TCP. Envía SYN, recibe SYN-ACK y responde con RST, evitando establecer una conexión completa. Esto lo hace más rápido, sigiloso y menos probable de ser detectado.
 
-## Source Port (–source-port) 
+```bash
+nmap -sS 192.168.1.100
+```
 
-Esta técnica consiste en configurar manualmente el número de **puerto de origen** de los paquetes enviados para evitar la detección por parte del Firewall. Nmap permite a los usuarios especificar manualmente un puerto de origen aleatorio o un puerto específico para evadir la detección del Firewall.
+### -sT (TCP Connect Scan)
 
+Escaneo predeterminado para TCP que completa el three-way handshake completo. Establece una conexión real con la máquina objetivo. Es más detectable pero funciona en sistemas sin privilegios root.
 
-## Decoy (-D) 
+```bash
+nmap -sT 192.168.1.100
+```
 
-Esta técnica de evasión en Nmap permite al usuario enviar **paquetes falsos** a la red para confundir a los sistemas de detección de intrusos y evitar la detección del Firewall. El comando **-D** permite al usuario enviar paquetes falsos junto con los paquetes reales de escaneo para ocultar su actividad.
+### -sn (Ping Sweep)
 
+Realiza un escaneo de toda una subred para identificar qué hosts están activos, sin escanear puertos. Ideal para mapeo rápido de la red y descubrimiento de dispositivos.
 
-## Fragmented (-f) 
+```bash
+nmap -sn 192.168.1.0/24
+```
 
-Esta técnica se basa en **fragmentar los paquetes** enviados para que el Firewall no pueda reconocer el tráfico como un escaneo. La opción **-f** en Nmap permite fragmentar los paquetes y enviarlos por separado para evitar la detección del Firewall.
+### -O (Detección de Sistema Operativo)
 
+Permite a Nmap intentar determinar el sistema operativo del objetivo basándose en características de respuesta TCP/IP. Requiere privilegios administrativos y realiza múltiples pruebas, por lo que puede ser lento. No siempre es 100% preciso.
 
-## Spoof-Mac (–spoof-mac) 
-Esta técnica de evasión se basa en **cambiar la dirección MAC** del paquete para evitar la detección del Firewall. Nmap permite al usuario configurar manualmente la dirección MAC para evitar ser detectado por el Firewall.
+```bash
+nmap -O 192.168.1.100
+```
 
+### -sV (Detección de Versiones de Servicios)
 
-## Stealth Scan (-sS) 
-Esta técnica es una de las más utilizadas para realizar escaneos sigilosos y evitar la detección del Firewall. El comando **-sS** permite a los usuarios realizar un escaneo de tipo **SYN** **sin establecer una conexión completa**, lo que permite evitar la detección del Firewall.
+Sondea los puertos abiertos para determinar qué servicios están ejecutándose y sus versiones. Utiliza una base de datos de firmas para identificar las aplicaciones. Información crucial para identificar vulnerabilidades conocidas.
 
+```bash
+nmap -sV 192.168.1.100
+```
 
-## min-rate (–min-rate) 
-Esta técnica permite al usuario **controlar la velocidad de los paquetes** enviados para evitar la detección del Firewall. El comando **–min-rate** permite al usuario reducir la velocidad de los paquetes enviados para evitar ser detectado por el Firewall.
+### -b (Idle/Zombie Scan)
 
-# Scripts Lua (.nse)
+Técnica avanzada que utiliza un host "zombie" intermediario para realizar el escaneo, ocultando la dirección IP verdadera. Requiere un host accesible con características específicas de IP ID incrementales.
 
-Una de las características más poderosas de **Nmap** es su capacidad para automatizar tareas utilizando **scripts personalizados**. Los scripts de Nmap permiten a los profesionales de seguridad automatizar las tareas de reconocimiento y descubrimiento en la red, además de obtener información valiosa sobre los sistemas y servicios que se están ejecutando en ellos. El parámetro **–script** de Nmap permite al usuario seleccionar un conjunto de scripts para ejecutar en un objetivo de escaneo específico.
+```bash
+nmap -Pn -v -n -p80 -b usuario:contraseña@10.10.1.1 objetivo.com
+```
 
-Existen diferentes categorías de scripts disponibles en Nmap, cada una diseñada para realizar una tarea específica. Algunas de las categorías más comunes incluyen:
+---
 
-- **default**: Esta es la categoría predeterminada en Nmap, que incluye una gran cantidad de scripts de reconocimiento básicos y útiles para la mayoría de los escaneos.
+## Técnicas de Evasión de Firewalls e IDS
 
-- **discovery**: Esta categoría se enfoca en descubrir información sobre la red, como la detección de hosts y dispositivos activos, y la resolución de nombres de dominio.
+En auditorías de seguridad profesionales, los firewalls e IDS (Intrusion Detection Systems) presentan desafíos significativos. Nmap ofrece múltiples técnicas para evadir estas defensas de forma ética y legal en entornos autorizados.
 
-- **safe**: Esta categoría incluye scripts que son considerados seguros y que no realizan actividades invasivas que puedan desencadenar una alerta de seguridad en la red.
+### --mtu (Maximum Transmission Unit)
 
-- **intrusive**: Esta categoría incluye scripts más invasivos que pueden ser detectados fácilmente por un sistema de detección de intrusos o un Firewall, pero que pueden proporcionar información valiosa sobre vulnerabilidades y debilidades en la red.
+Ajusta el tamaño de los paquetes enviados. Algunos firewalls inspeccionan solo paquetes de tamaño estándar. Al fragmentar intencionalmente los paquetes en unidades más pequeñas, es posible evadir ciertos filtros. El valor debe ser múltiplo de 8.
 
-- **vuln**: Esta categoría se enfoca específicamente en la detección de vulnerabilidades y debilidades en los sistemas y servicios que se están ejecutando en la red.
+```bash
+nmap --mtu 16 -sS 192.168.1.100
+```
 
+### --data-length (Longitud de Datos)
 
-## sC
+Añade datos adicionales a los paquetes de escaneo. Los firewalls a veces filtran basándose en tamaños de paquete predeterminados. Esta opción agrega bytes adicionales para variar el tamaño y potencialmente evadir reglas basadas en firmas.
 
-Realiza el escaneo con los scripts más relevantes.
+```bash
+nmap --data-length 200 192.168.1.100
+```
 
+### --source-port (Puerto de Origen)
 
-## Scripts 
+Especifica el puerto de origen para los paquetes de escaneo. Muchas reglas de firewall permiten tráfico desde puertos específicos (como DNS en puerto 53 o SMTP en puerto 25). Esta técnica aprovecha esos agujeros.
 
-### http-enum
+```bash
+nmap --source-port 53 192.168.1.100
+```
 
-Te enumera la IP para ver si tiene directorios dentro.
+### -D (Decoy Scan - Escaneo con Señuelos)
 
+Envía paquetes decoy (falsos) junto con los reales para confundir a los sistemas de detección. El IDS verá múltiples fuentes de escaneo, dificultando la identificación del atacante verdadero. Puede incluir tu propia IP (ME) para referencia.
 
-### ftp-anon
-Realiza un escaneo para ver si el servicio ftp tiene el usuario por defecto Anonymous.
+```bash
+nmap -D 192.168.1.50,192.168.1.60,ME 192.168.1.100
+```
 
+### -f (Fragmented - Fragmentación de Paquetes)
 
+Fragmenta los paquetes de escaneo en fragmentos IP más pequeños. Algunos firewalls y sistemas de detección tienen dificultades para reconstruir paquetes fragmentados, permitiendo evadir la detección. Utilizar -f dos veces aumenta más la fragmentación.
 
-# Scripts personalizados
+```bash
+nmap -f 192.168.1.100        # Fragmentación estándar
+nmap -ff 192.168.1.100       # Fragmentación más agresiva
+```
 
-Nmap permite a los profesionales de seguridad personalizar y extender sus capacidades mediante la creación de scripts personalizados en el lenguaje de programación **Lua**. Lua es un lenguaje de scripting simple, flexible y poderoso que es fácil de aprender y de usar para cualquier persona interesada en crear scripts personalizados para Nmap.
+### --spoof-mac (Spoofing de Dirección MAC)
 
-Para utilizar Lua como un script personalizado en Nmap, es necesario tener conocimientos básicos del lenguaje de programación Lua y comprender la estructura básica que debe tener el script. La estructura básica de un script de Lua en Nmap incluye la definición de una tabla, que contiene diferentes campos y valores que describen la funcionalidad del script.
+Falsifica la dirección MAC de origen. Útil en redes locales para evadir listas de control de acceso basadas en MAC o para enmascarar la identidad del dispositivo. Requiere ejecutarse en modo promiscuo.
 
-Los campos más comunes que se definen en la tabla de un script de Lua en Nmap incluyen:
+```bash
+nmap --spoof-mac 00:11:22:33:44:55 192.168.1.100
+```
 
-- **description**: Este campo se utiliza para proporcionar una descripción corta del script y su funcionalidad.
-- **categories**: Este campo se utiliza para especificar las categorías a las que pertenece el script, como descubrimiento, explotación, enumeración, etc.
-- **author**: Este campo se utiliza para identificar al autor del script.
-- **license**: Este campo se utiliza para especificar los términos de la licencia bajo la cual se distribuye el script.
-- **dependencies**: Este campo se utiliza para especificar cualquier dependencia de biblioteca o software que requiera el script para funcionar correctamente.
-- **actions**: Este campo se utiliza para definir la funcionalidad específica del script, como la realización de un escaneo de puertos, la detección de vulnerabilidades, etc.
+### --min-rate (Velocidad Mínima de Paquetes)
 
-Una vez que se ha creado un script de Lua personalizado en Nmap, se puede invocar utilizando el parámetro **–script** y el nombre del archivo del script. Con la creación de scripts personalizados en Lua, es posible personalizar aún más las capacidades de Nmap y obtener información valiosa sobre los sistemas y servicios en la red.
+Controla la velocidad de envío de paquetes. Valores bajos ralentizan el escaneo pero lo hacen más sigiloso. Útil para evadir sistemas de detección basados en tasa (rate-based IDS que detectan anomalías por volumen de tráfico).
 
-Ejemplo:
+```bash
+nmap --min-rate 10 192.168.1.0/24
+```
+
+---
+
+## Scripts NSE (Nmap Scripting Engine)
+
+El NSE (Nmap Scripting Engine) permite extender las capacidades de Nmap mediante scripts personalizados escritos en Lua. Estos scripts permiten automatizar tareas complejas de reconocimiento, detección de vulnerabilidades y obtención de información detallada sobre servicios.
+
+### Categorías de Scripts Disponibles
+
+| Categoría | Descripción |
+|-----------|-------------|
+| **default** | Scripts básicos y útiles, seguros y ampliamente probados |
+| **discovery** | Descubrimiento de información de la red y dispositivos |
+| **safe** | Scripts seguros que no causan interrupciones o alertas |
+| **intrusive** | Scripts más invasivos, pueden ser detectados por IDS |
+| **vuln** | Scripts específicamente enfocados en detección de vulnerabilidades |
+
+### -sC (Default Scripts)
+
+Ejecuta todos los scripts de la categoría "default". Son scripts ampliamente probados y seguros que proporcionan información valiosa sin ser invasivos. Excelente punto de partida para cualquier enumeración.
+
+```bash
+nmap -sC 192.168.1.100
+```
+
+### Scripts Populares y Útiles
+
+#### http-enum
+
+Enumera directorios y archivos comunes en servidores web. Intenta acceder a paths típicos y reporta cuáles existen y son accesibles.
+
+```bash
+nmap --script http-enum 192.168.1.100
+```
+
+#### ftp-anon
+
+Intenta conectarse a servidores FTP utilizando credenciales anónimas. Si tiene éxito, enumerará el contenido accesible del servidor FTP. Útil para detectar configuraciones inseguras.
+
+```bash
+nmap --script ftp-anon 192.168.1.100
+```
+
+#### smb-enum-shares
+
+Enumera shares (recursos compartidos) en sistemas Windows mediante SMB. Identifica qué recursos están disponibles e información sobre permisos.
+
+```bash
+nmap --script smb-enum-shares 192.168.1.100
+```
+
+### Creación de Scripts Personalizados en Lua
+
+Lua es el lenguaje de scripting utilizado por Nmap. Los scripts personalizados permiten implementar lógica de reconocimiento específica para casos de uso particulares.
+
+#### Estructura Básica de un Script NSE
 
 ```lua
--- HEAD --
+-- DESCRIPCIÓN
+description = [[Script que reporta puertos TCP abiertos]]
+author = "Tu Nombre"
+license = "Same as Nmap--See https://nmap.org/book/man-legal.html"
+categories = {"discovery"}
 
-description = [[ Script de ejemplo que enumera y reporta puertos abiertos por TCP ]]
-
--- RULE --
-
+-- REGLA: Cuándo ejecutar el script
 portrule = function(host, port)
-	return port.protocol == "tcp"
-	and port.state == "open"
+  return port.protocol == "tcp" and port.state == "open"
 end
 
--- ACTION --
-
+-- ACCIÓN: Qué hacer
 action = function(host, port)
-	return "This port is open!"
+  return "Puerto TCP abierto identificado"
 end
-
 ```
 
+Los campos principales son:
 
+- **description**: Descripción del script
+- **categories**: Categorías a las que pertenece
+- **portrule/hostrule**: Condición para ejecutar el script
+- **action**: Función principal del script
 
-# Herramientas adicionales
+---
 
-Para auditorias grandes podemos utilizar herramientas que nos escanen varios hosts a la vez, para esto hay dos herramientas que pueden ser alimentadas con la salida de escaneo [[👁️‍🗨️​ - NMAP]] en XML
+## Herramientas Complementarias de Enumeración
 
-Estas capturas de pantalla pueden ayudarnos a reducir potencialmente 100s de hosts y construir una lista más específica de aplicaciones que deberíamos pasar más tiempo enumerando y atacando. Estas herramientas están disponibles tanto para Windows como para Linux, por lo que podemos utilizarlas en lo que elijamos para nuestro cuadro de ataque en un entorno determinado. Recorremos algunos ejemplos de cada uno para crear un inventario de aplicaciones presentes en el objetivo `INLANEFREIGHT.LOCAL` dominio.
+Para auditorías a gran escala que involucren múltiples hosts, las herramientas que procesan la salida XML de Nmap permiten automatizar la generación de informes visuales y la identificación de aplicaciones web.
 
-```shell
-vcrdcr@htb[/htb]$ cat scope_list 
+### EyeWitness
 
-app.inlanefreight.local
-dev.inlanefreight.local
-drupal-dev.inlanefreight.local
-drupal-qa.inlanefreight.local
-drupal-acc.inlanefreight.local
-drupal.inlanefreight.local
-blog-dev.inlanefreight.local
-blog.inlanefreight.local
-app-dev.inlanefreight.local
-jenkins-dev.inlanefreight.local
-jenkins.inlanefreight.local
-web01.inlanefreight.local
-gitlab-dev.inlanefreight.local
-gitlab.inlanefreight.local
-support-dev.inlanefreight.local
-support.inlanefreight.local
-inlanefreight.local
-10.129.201.50
+Herramienta automatizada que captura pantallas de aplicaciones web a partir de la salida XML de Nmap. Identifica aplicaciones, detecta fingerprints de tecnologías y sugiere credenciales predeterminadas. Genera un informe HTML interactivo.
+
+#### Instalación
+
+```bash
+sudo apt install eyewitness
 ```
 
-```shell
-sudo  nmap -p 80,443,8000,8080,8180,8888,10000 --open -oA web_discovery -iL scope_list 
+#### Uso Básico
+
+```bash
+eyewitness --web -x resultados.xml -d salida_eyewitness
 ```
 
+**Opciones útiles:**
+- `-f`: Archivo de URLs
+- `--single`: URL única
+- `--threads`: Número de threads paralelos
+- `--timeout`: Segundos de espera máximos
+- `--ocr`: Extrae texto de las imágenes capturadas
 
-## EyeWitness
-https://github.com/RedSiege/EyeWitness
+### Aquatone
 
-EyeWitness puede tomar la salida Nessus XML
+Similar a EyeWitness, Aquatone es una herramienta moderna escrita en Go que captura pantallas de URLs. Lee directamente archivos XML de Nmap y genera reportes HTML organizados con clustering automático de páginas similares.
 
-EyeWitness puede tomar la salida XML de Nmap y Nessus y crear un informe con capturas de pantalla de cada aplicación web presente en los diversos puertos utilizando Selenium. También llevará las cosas un paso más allá y categorizará las aplicaciones cuando sea posible, las tomará con las huellas dactilares y sugerirá credenciales predeterminadas basadas en la aplicación. También se le puede dar una lista de direcciones IP y URL y se le puede pedir que se ponga previamente `http://` y `https://` al frente de cada uno. Realizará la resolución DNS para las IP y se le puede dar un conjunto específico de puertos para intentar conectarse y capturar pantalla.
+#### Instalación
 
-Podemos instalar EyeWitness a través de apt:
-
-```shell
-vcrdcr@htb[/htb]$ sudo apt install eyewitness
+```bash
+wget https://github.com/michenriksen/aquatone/releases/download/v1.7.0/aquatone_linux_amd64_1.7.0.zip
+unzip aquatone_linux_amd64_1.7.0.zip
+sudo mv aquatone /usr/local/bin/
 ```
 
-o clonar el [repositorio](https://github.com/FortyNorthSecurity/EyeWitness), navega hacia el `Python/setup` directorio y ejecutar el `setup.sh` script de instalador. EyeWitness también se puede ejecutar desde un contenedor Docker, y una versión de Windows está disponible, que se puede compilar utilizando Visual Studio.
+#### Uso Básico
 
-Corriendo `eyewitness -h` nos mostrará las opciones disponibles para nosotros:
-
-```shell
-vcrdcr@htb[/htb]$ eyewitness -h
-
-usage: EyeWitness.py [--web] [-f Filename] [-x Filename.xml]
-                     [--single Single URL] [--no-dns] [--timeout Timeout]
-                     [--jitter # of Seconds] [--delay # of Seconds]
-                     [--threads # of Threads]
-                     [--max-retries Max retries on a timeout]
-                     [-d Directory Name] [--results Hosts Per Page]
-                     [--no-prompt] [--user-agent User Agent]
-                     [--difference Difference Threshold]
-                     [--proxy-ip 127.0.0.1] [--proxy-port 8080]
-                     [--proxy-type socks5] [--show-selenium] [--resolve]
-                     [--add-http-ports ADD_HTTP_PORTS]
-                     [--add-https-ports ADD_HTTPS_PORTS]
-                     [--only-ports ONLY_PORTS] [--prepend-https]
-                     [--selenium-log-path SELENIUM_LOG_PATH] [--resume ew.db]
-                     [--ocr]
-
-EyeWitness is a tool used to capture screenshots from a list of URLs
-
-Protocols:
-  --web                 HTTP Screenshot using Selenium
-
-Input Options:
-  -f Filename           Line-separated file containing URLs to capture
-  -x Filename.xml       Nmap XML or .Nessus file
-  --single Single URL   Single URL/Host to capture
-  --no-dns              Skip DNS resolution when connecting to websites
-
-Timing Options:
-  --timeout Timeout     Maximum number of seconds to wait while requesting a
-                        web page (Default: 7)
-  --jitter # of Seconds
-                        Randomize URLs and add a random delay between requests
-  --delay # of Seconds  Delay between the opening of the navigator and taking
-                        the screenshot
-  --threads # of Threads
-                        Number of threads to use while using file based input
-  --max-retries Max retries on a timeout
-                        Max retries on timeouts
-
-<SNIP>
+```bash
+cat resultados.xml | aquatone -nmap
 ```
 
-Ejecutemos el valor predeterminado `--web` opción para tomar capturas de pantalla utilizando la salida Nmap XML del escaneo de descubrimiento como entrada.
+Aquatone genera un archivo `aquatone_report.html` que puede ser abierto en cualquier navegador para visualizar las capturas de pantalla agrupadas.
 
-```shell
-vcrdcr@htb[/htb]$ eyewitness --web -x web_discovery.xml -d inlanefreight_eyewitness
+---
 
-################################################################################
-#                                  EyeWitness                                  #
-################################################################################
-#           FortyNorth Security - https://www.fortynorthsecurity.com           #
-################################################################################
+## Workflow Práctico: Escaneo Completo
 
-Starting Web Requests (26 Hosts)
-Attempting to screenshot http://app.inlanefreight.local
-Attempting to screenshot http://app-dev.inlanefreight.local
-Attempting to screenshot http://app-dev.inlanefreight.local:8000
-Attempting to screenshot http://app-dev.inlanefreight.local:8080
-Attempting to screenshot http://gitlab-dev.inlanefreight.local
-Attempting to screenshot http://10.129.201.50
-Attempting to screenshot http://10.129.201.50:8000
-Attempting to screenshot http://10.129.201.50:8080
-Attempting to screenshot http://dev.inlanefreight.local
-Attempting to screenshot http://jenkins-dev.inlanefreight.local
-Attempting to screenshot http://jenkins-dev.inlanefreight.local:8000
-Attempting to screenshot http://jenkins-dev.inlanefreight.local:8080
-Attempting to screenshot http://support-dev.inlanefreight.local
-Attempting to screenshot http://drupal-dev.inlanefreight.local
-[*] Hit timeout limit when connecting to http://10.129.201.50:8000, retrying
-Attempting to screenshot http://jenkins.inlanefreight.local
-Attempting to screenshot http://jenkins.inlanefreight.local:8000
-Attempting to screenshot http://jenkins.inlanefreight.local:8080
-Attempting to screenshot http://support.inlanefreight.local
-[*] Completed 15 out of 26 services
-Attempting to screenshot http://drupal-qa.inlanefreight.local
-Attempting to screenshot http://web01.inlanefreight.local
-Attempting to screenshot http://web01.inlanefreight.local:8000
-Attempting to screenshot http://web01.inlanefreight.local:8080
-Attempting to screenshot http://inlanefreight.local
-Attempting to screenshot http://drupal-acc.inlanefreight.local
-Attempting to screenshot http://drupal.inlanefreight.local
-Attempting to screenshot http://blog-dev.inlanefreight.local
-Finished in 57.859838008880615 seconds
+A continuación se presenta un flujo de trabajo recomendado para una enumeración profesional y completa:
 
-[*] Done! Report written in the /home/mrb3n/Projects/inlanfreight/inlanefreight_eyewitness folder!
-Would you like to open the report now? [Y/n]
+### Paso 1: Descubrimiento de Hosts
+
+```bash
+nmap -sn -oA descubrimiento 192.168.1.0/24
 ```
 
-## Aquatone
-https://github.com/michenriksen/aquatone
+### Paso 2: Escaneo de Puertos en Hosts Activos
 
-Aquatone también puede tomar Masscan XML
-
-[Aquatone](https://github.com/michenriksen/aquatone), como se mencionó anteriormente, es similar a EyeWitness y puede tomar capturas de pantalla cuando se proporciona un `.txt` archivo de hosts o un Nmap `.xml` archivo con el `-nmap` bandera. Podemos compilar Aquatone por nuestra cuenta o descargar un binario precompilado. Después de descargar el binario, solo necesitamos extraerlo, y estamos listos para comenzar.
-
-Nota: `Aquatone` actualmente se encuentra en desarrollo activo en un nuevo [tenedor](https://github.com/shelld3v/aquatone), centrándose en mejoras y mejoras de características. Consulte la guía de instalación proporcionada en el repositorio.
-
-```shell
-vcrdcr@htb[/htb]$ wget https://github.com/michenriksen/aquatone/releases/download/v1.7.0/aquatone_linux_amd64_1.7.0.zip
+```bash
+nmap -sS -sV -p- -oA puertos -iL hosts_activos.txt
 ```
 
-```shell-session
-vcrdcr@htb[/htb]$ unzip aquatone_linux_amd64_1.7.0.zip 
+### Paso 3: Ejecución de Scripts NSE
 
-Archive:  aquatone_linux_amd64_1.7.0.zip
-  inflating: aquatone                
-  inflating: README.md               
-  inflating: LICENSE.txt 
+```bash
+nmap -sC --script vuln -oA scripts -iL hosts_activos.txt
 ```
 
-Podemos moverlo a una ubicación en nuestro `$PATH` como `/usr/local/bin` para poder llamar a la herramienta desde cualquier lugar o simplemente soltar el binario en nuestro directorio de trabajo (digamos, escaneos). Es una preferencia personal, pero generalmente es más eficiente construir nuestras VM de ataque con la mayoría de las herramientas disponibles para usar sin tener que cambiar constantemente los directorios o llamarlos desde otros directorios.
+### Paso 4: Enumeración Web (si aplica)
 
-```shell-session
-vcrdcr@htb[/htb]$ echo $PATH
-
-/home/mrb3n/.local/bin:/snap/bin:/usr/sandbox/:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games:/usr/share/games:/usr/local/sbin:/usr/sbin:/sbin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
+```bash
+nmap -p 80,443,8000,8080 --open -oX web_discovery.xml -iL hosts_activos.txt
 ```
 
-En este ejemplo, proporcionamos la misma herramienta `web_discovery.xml` Salida de mapa que especifica el `-nmap` bandera, y nos vamos a las carreras.
-
-```shell-session
-vcrdcr@htb[/htb]$ cat web_discovery.xml | ./aquatone -nmap
-
-aquatone v1.7.0 started at 2021-09-07T22:31:03-04:00
-
-Targets    : 65
-Threads    : 6
-Ports      : 80, 443, 8000, 8080, 8443
-Output dir : .
-
-http://web01.inlanefreight.local:8000/: 403 Forbidden
-http://app.inlanefreight.local/: 200 OK
-http://jenkins.inlanefreight.local/: 403 Forbidden
-http://app-dev.inlanefreight.local/: 200 
-http://app-dev.inlanefreight.local/: 200 
-http://app-dev.inlanefreight.local:8000/: 403 Forbidden
-http://jenkins.inlanefreight.local:8000/: 403 Forbidden
-http://web01.inlanefreight.local:8080/: 200 
-http://app-dev.inlanefreight.local:8000/: 403 Forbidden
-http://10.129.201.50:8000/: 200 OK
-
-<SNIP>
-
-http://web01.inlanefreight.local:8000/: screenshot successful
-http://app.inlanefreight.local/: screenshot successful
-http://app-dev.inlanefreight.local/: screenshot successful
-http://jenkins.inlanefreight.local/: screenshot successful
-http://app-dev.inlanefreight.local/: screenshot successful
-http://app-dev.inlanefreight.local:8000/: screenshot successful
-http://jenkins.inlanefreight.local:8000/: screenshot successful
-http://app-dev.inlanefreight.local:8000/: screenshot successful
-http://app-dev.inlanefreight.local:8080/: screenshot successful
-http://app.inlanefreight.local/: screenshot successful
-
-<SNIP>
-
-Calculating page structures... done
-Clustering similar pages... done
-Generating HTML report... done
-
-Writing session file...Time:
- - Started at  : 2021-09-07T22:31:03-04:00
- - Finished at : 2021-09-07T22:31:36-04:00
- - Duration    : 33s
-
-Requests:
- - Successful : 65
- - Failed     : 0
-
- - 2xx : 47
- - 3xx : 0
- - 4xx : 18
- - 5xx : 0
-
-Screenshots:
- - Successful : 65
- - Failed     : 0
-
-Wrote HTML report to: aquatone_report.html
+```bash
+eyewitness --web -x web_discovery.xml -d salida_web
 ```
+

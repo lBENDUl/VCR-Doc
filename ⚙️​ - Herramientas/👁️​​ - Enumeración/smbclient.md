@@ -1,25 +1,64 @@
-#Linux #Enumeración 
+# smbclient
 
-Smbclient es otra herramienta de línea de comandos utilizada para interactuar con servidores SMB y Samba, pero a diferencia de smbmap que se utiliza principalmente para enumeración, smbclient proporciona una interfaz de línea de comandos para interactuar con los recursos compartidos SMB y Samba, lo que permite la descarga y subida de archivos, la ejecución de comandos remotos, la navegación por el sistema de archivos remoto, entre otras funcionalidades.
+smbclient es una herramienta de línea de comandos para interactuar con recursos compartidos SMB/Samba. A diferencia de smbmap (orientado a enumeración), smbclient proporciona una interfaz similar a FTP para navegar, descargar y subir archivos.
 
-En cuanto a los parámetros más comunes de smbclient, algunos de ellos son:
+---
 
-- **-L**: Este parámetro se utiliza para enumerar los recursos compartidos disponibles en el servidor SMB o Samba.
+## Enumerar recursos compartidos
 
-- **-U**: Este parámetro se utiliza para especificar el nombre de usuario y la contraseña utilizados para la autenticación con el servidor SMB o Samba.
+```bash
+# Sesión anónima (sin credenciales)
+smbclient -L 192.168.1.10 -N
 
-- **-c**: Este parámetro se utiliza para especificar un comando que se ejecutará en el servidor SMB o Samba.
-
-
-Estos son algunos de los parámetros más comunes utilizados en smbclient, aunque hay otros disponibles. La lista completa de parámetros y sus descripciones se pueden encontrar en la documentación oficial de la herramienta.
-
-```
-smbclient -L 127.0.0.1 -N
+# Con credenciales
+smbclient -L 192.168.1.10 -U usuario%contraseña
 ```
 
+---
 
-Para conectarse al recurso  compartido
+## Conectarse a un recurso compartido
 
+```bash
+# Sesión anónima
+smbclient //192.168.1.10/compartido -N
+
+# Con credenciales
+smbclient //192.168.1.10/compartido -U usuario%contraseña
 ```
-smbclient //127,0,0,1/myshare -N
+
+---
+
+## Comandos dentro de la sesión
+
+```bash
+ls                        # Listar archivos
+get archivo.txt           # Descargar archivo
+put archivo.txt           # Subir archivo
+cd carpeta                # Cambiar directorio
+mget *.txt                # Descargar múltiples archivos
+recurse ON; mget *        # Descarga recursiva
 ```
+
+---
+
+## Parámetros principales
+
+| Flag | Descripción |
+|---|---|
+| `-L` | Listar recursos compartidos del servidor |
+| `-N` | Sin contraseña (sesión anónima/null) |
+| `-U` | Usuario y contraseña (`usuario%pass`) |
+| `-c` | Ejecutar comando sin entrar en modo interactivo |
+
+Ejemplo con `-c`:
+
+```bash
+smbclient //192.168.1.10/compartido -N -c "ls"
+```
+
+---
+
+## Ver también
+
+- [smbmap](smbmap.md) — Enumeración de permisos y recursos
+- [SMB](../01-reconocimiento/smb.md) — Protocolo, autenticación y explotación

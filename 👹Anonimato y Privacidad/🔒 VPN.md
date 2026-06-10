@@ -3,10 +3,49 @@ tags:
   - Anonimato-Privacidad
   - VPN
 ---
-https://protonvpn.com/es-es
+# VPN
 
-**Es una VPN (Red Privada Virtual) que se enfoca en proporcionar privacidad y seguridad en línea a los usuarios. Al igual que otras VPN, ProtonVPN encripta el tráfico de Internet y lo hace pasar a través de un servidor remoto para ocultar la dirección IP real del usuario y enmascarar su ubicación geográfica.
+Una VPN (Virtual Private Network) cifra todo el tráfico del sistema y lo enruta a través de un servidor remoto, ocultando la IP real del usuario. A diferencia de un proxy, actúa a nivel de sistema operativo y protege todas las conexiones, no solo las de una aplicación concreta.
 
-ProtonVPN ofrece varias características de seguridad y privacidad para proteger los datos del usuario, como la encriptación AES-256, la autenticación HMAC con SHA384 y la protección contra fugas de DNS. La VPN también cuenta con una política de no registro, lo que significa que no se guarda ningún registro de la actividad en línea del usuario.
+---
 
-Una de las características únicas de ProtonVPN es su enfoque en la privacidad y la seguridad. El servicio fue creado por los mismos desarrolladores que crearon ProtonMail, un servicio de correo electrónico cifrado de extremo a extremo. ProtonVPN también ofrece una opción de "Secure Core", que enruta el tráfico de Internet a través de servidores seguros ubicados en países con leyes de privacidad fuertes, antes de enviarlo al servidor remoto final.**
+## ProtonVPN
+
+[ProtonVPN](https://protonvpn.com/es-es) es la opción recomendada por su enfoque en privacidad. Fue creada por el mismo equipo de ProtonMail (CERN/MIT) y tiene sede en Suiza, con leyes de privacidad sólidas.
+
+### Características destacadas
+
+- Cifrado **AES-256** con autenticación HMAC-SHA384
+- **Política de cero registros** — no se almacena actividad del usuario
+- Protección contra **fugas de DNS**
+- **Secure Core**: encadena el tráfico a través de servidores en países con legislación de privacidad fuerte (Suiza, Islandia, Suecia) antes de salir al destino final
+- Tiene **plan gratuito** sin límite de datos
+
+### Instalación en Kali Linux
+
+```bash
+# Descargar el paquete .deb desde la web oficial
+wget https://protonvpn.com/download/protonvpn-stable-release_1.0.3-3_all.deb
+sudo dpkg -i protonvpn-stable-release_1.0.3-3_all.deb
+sudo apt update
+sudo apt install proton-vpn-gnome-desktop
+```
+
+---
+
+## VPN + TOR
+
+Combinar VPN con TOR es la configuración más anónima disponible:
+
+1. Conectar a ProtonVPN
+2. Usar TOR Browser o ProxyChains con TOR
+
+El proveedor VPN solo ve tráfico cifrado hacia la red TOR. Los nodos TOR solo ven la IP de salida de la VPN, no la IP real.
+
+**Contrapartida:** velocidad significativamente reducida por las capas adicionales.
+
+---
+
+## Referencias
+
+- [protonvpn.com](https://protonvpn.com/es-es)

@@ -2,95 +2,87 @@
 tags:
   - Anonimato-Privacidad
 ---
-Los Zero Knowledge Services son un tipo de servicio que permite a dos partes interactuar entre sí sin revelar ninguna información sensible.
+# Zero Knowledge Services
 
-## ¿Que son los Zero Knowledge Services?
+Los Zero Knowledge Services son servicios que almacenan, transfieren o procesan datos **cifrados del lado del cliente**, de forma que el proveedor nunca tiene acceso a la información en texto plano. Las claves de cifrado permanecen siempre en manos del usuario.
 
-Software que almacena, transfiere o manipula únicamente datos cifrados de manera que esta información sólo es visible para su propietario y no para el proveedor de servicios.
+Además de no tener acceso al contenido, estos servicios minimizan los metadatos que recopilan para no comprometer la privacidad más allá de lo estrictamente necesario.
 
-﻿Los datos se cifran del lado del cliente en el caso de un solo cliente, o de extremo a extremo en el caso de múltiples clientes. El proveedor de servicios no conserva las claves y no puede descifrar y acceder a la información
+---
 
-Además, garantizan mantener la menor cantidad posible de metadatos para no comprometer la privacidad del cliente almacenando más datos de los necesarios funcionalmente.
+## Comunicación
 
-## SpiderOak CrossClave
+### Signal
+Aplicación de mensajería y llamadas con cifrado de extremo a extremo. Protocolo Signal, código abierto y auditado independientemente. Referencia en privacidad de comunicaciones.
 
-SpiderOak CrossClave es un servicio de cifrado de extremo a extremo que permite a los usuarios compartir y almacenar archivos en línea de forma segura y privada. Dispone de un chat cifrado y un sistema para compartir archivos El servicio utiliza una combinación de algoritmos de cifrado avanzados y técnicas de seguridad para proteger los archivos y garantizar la privacidad del usuario.
+- [signal.org](https://signal.org/es/) — Gratuito, Open Source
 
-[![Logo](https://cdn-ifajj.nitrocdn.com/MsUsuNsOxHlvYnfJMjayCRBgpSYrFLKk/assets/images/optimized/rev-246a8b5/wp-content/uploads/2022/09/cropped-favicon-300x300.png)Crossclave | SpiderOakSpideroak](https://spideroak.com/crossclave/)
+### ProtonMail
+Servicio de correo con cifrado de extremo a extremo. Desarrollado en el CERN/MIT, con sede en Suiza. Los mensajes entre usuarios de ProtonMail se cifran automáticamente; con usuarios externos se puede proteger con contraseña.
 
-Tiene versión gratuita
+- [proton.me/mail](https://proton.me/es-es/mail) — Tiene plan gratuito
 
-## Proton Mail
+### SpiderOak CrossClave
+Chat cifrado y sistema de compartición de archivos con cifrado extremo a extremo.
 
-Es el servicio de correo más seguro que existe. ProtonMail es un servicio de correo electrónico seguro y privado que utiliza cifrado de extremo a extremo para proteger los mensajes de los usuarios. Fue desarrollado por el equipo del CERN y el MIT y se lanzó en 2014. El servicio está diseñado para proporcionar una alternativa segura y privada a los servicios de correo electrónico tradicionales, que a menudo recopilan y utilizan los datos de los usuarios con fines publicitarios o de otro tipo.
+- [spideroak.com/crossclave](https://spideroak.com/crossclave/) — Tiene versión gratuita
 
-[![Logo](https://proton.me/favicons/apple-touch-icon.png)Proton Mail: un correo electrónico privado, seguro y cifrado | ProtonProton](https://proton.me/es-es/mail)
+### Keybase
+Mensajería instantánea, almacenamiento de archivos y contraseñas con cifrado extremo a extremo. Permite verificar identidades criptográficamente.
 
-Tiene versión gratuita
+- [keybase.io](https://keybase.io/) — Gratuito
 
-## Tresorit
+---
 
-Tresorit es un servicio de almacenamiento en la nube seguro y privado que utiliza cifrado de extremo a extremo para proteger los datos de los usuarios. Fue fundado en 2011 por un equipo de expertos en seguridad de la información de Hungría y Suiza, y desde entonces se ha expandido a nivel mundial.
+## Almacenamiento en la nube
 
-[![Logo](https://cdn.tresorit.com/webv10/dist/gatsby/favicon/favicon-228.ac86a55a.png)End-to-End Encrypted Cloud Storage for Businesses | Tresorit](https://tresorit.com/)
+### Tresorit
+Almacenamiento en la nube con cifrado de extremo a extremo. Fundado en 2011, con sede en Suiza. Cumplimiento GDPR y opciones empresariales.
 
-Solo tiene versión de pago
+- [tresorit.com](https://tresorit.com/) — Solo versión de pago
 
-## KeePass XC
+---
 
-KeePassXC es un programa de gestión de contraseñas de código abierto y multiplataforma que se utiliza para almacenar contraseñas y otra información confidencial de manera segura. KeePassXC utiliza una base de datos cifrada para almacenar las contraseñas y otra información confidencial. La base de datos se cifra mediante un algoritmo de cifrado AES de 256 bits, lo que garantiza la seguridad de los datos almacenados.
+## Gestión de contraseñas
 
-[![Logo](https://keepassxc.org/favicon-256x256.png)KeePassXC Password Manager](https://keepassxc.org/)
+### KeePassXC
+Gestor de contraseñas local de código abierto. Cifra la base de datos con AES-256. Los datos nunca salen del dispositivo.
 
-Es gratuito y Open Source
+- [keepassxc.org](https://keepassxc.org/) — Gratuito, Open Source
 
+---
 
-## Signal
+## Navegación
 
-Signal es una aplicación de mensajería y llamadas de voz y video seguras y privadas. Fue desarrollada por Open Whisper Systems y se lanzó en 2014. Signal utiliza cifrado de extremo a extremo para proteger las comunicaciones de los usuarios, lo que significa que solo los usuarios que participan en la conversación pueden leer los mensajes o escuchar las llamadas.
+### Brave Browser
+Navegador centrado en privacidad con bloqueador de anuncios y rastreadores integrado. Incluye ventanas privadas con TOR nativo. Usa HTTPS en todas las conexiones por defecto.
 
-[![Logo](https://signal.org/assets/favicon/android-icon-192x192-2ce7be93a7e75de13098e18298fcb8910772ec2e035cea23f3c2ad438ff8e504.png)Signal Messenger: Speak FreelySignal Messenger](https://signal.org/es/)
+- [brave.com](https://brave.com/es/) — Gratuito, Open Source
 
-Es gratuito y Open Source
+### DuckDuckGo
+Motor de búsqueda que no recopila ni almacena datos del usuario, no crea perfiles y usa servidores cifrados.
 
-## Brave Browser
+- [duckduckgo.com](https://duckduckgo.com/) — Gratuito
 
-Es el navegador más seguro que existe, con navegación privada a través de TOR. Es un navegador web de código abierto y de alta privacidad que se enfoca en proteger la privacidad y la seguridad del usuario mientras navega por la web. Utiliza tecnologías para bloquear anuncios, rastreadores y cookies de terceros, lo que ayuda a proteger la privacidad del usuario. Además, Brave Browser utiliza HTTPS en todas las conexiones web, lo que garantiza que las comunicaciones entre el usuario y los sitios web que visita estén cifradas y seguras.
+---
 
-[![Logo](https://brave.com/static-assets/images/cropped-brave_appicon_release-192x192.png)Navegador web seguro, rápido y privado con Adblocker | Brave BrowserBrave Browser](https://brave.com/es/)
+## Correo temporal
 
-Es gratuito y Open Source
+### Maildrop
+Servicio de correo desechable para registros en servicios que requieren email sin exponer la dirección real.
 
-## DuckDuckGo
+- [maildrop.cc](https://maildrop.cc/) — Gratuito
 
-DuckDuckGo es un motor de búsqueda en línea que se enfoca en proteger la privacidad del usuario y evitar el seguimiento de la actividad en línea. DuckDuckGo se diferencia de otros motores de búsqueda en línea al no recopilar ni almacenar información personal del usuario, como la dirección IP o el historial de búsqueda. Además, DuckDuckGo utiliza servidores encriptados para evitar que terceros puedan interceptar la información de búsqueda del usuario.
+---
 
-[![Logo](https://duckduckgo.com/assets/icons/meta/DDG-iOS-icon_152x152.png)DuckDuckGo — Privacy, simplified.DuckDuckGo](https://duckduckgo.com/)
+## Herramientas adicionales
 
-Es gratuito y Open Source
+### SquareX
+Extensión de Chrome que integra navegador desechable con TOR, visor de archivos maliciosos online y correo desechable en un solo lugar.
 
-## Maildrop
+- [sqrx.com](https://sqrx.com/) — Gratuito
 
-Maildrop es un servicio de correo electrónico temporal que se utiliza para crear direcciones de correo electrónico desechables y proteger la privacidad del usuario al realizar registros en línea o en sitios web que requieren una dirección de correo electrónico.
+### I2P (Invisible Internet Project)
+Red anónima y descentralizada alternativa a TOR. Lanzada en 2003, basada también en enrutamiento en capas. Más enfocada en comunicaciones internas entre nodos que en acceso a Internet convencional.
 
-[![Logo](https://maildrop.cc/favicon.ico)Maildrop - Free Disposable Email Address](https://maildrop.cc/)
-
-Es totalmente gratuito
-
-## SquareX
-
-Es una extensión de Chrome que nos permite tener un Disposable Browser con TOR, un visor de archivos maliciosos online y un Disposable Mail desde una única extensión.
-
-[![Logo](https://sqrx.com/static/favicon/squarex.png)SquareX: Be Fearless Onlinegetsquarex](https://sqrx.com/)
-
-## The Invisible Internet Proyect (I2P)
-
-The Invisible Internet Project (I2P) es una red anónima y descentralizada que se utiliza para proteger la privacidad y la seguridad del usuario mientras navega por la web. Fue lanzado en 2003 y se basa en una arquitectura de red de cebolla similar a la utilizada por la red Tor.
-
-[https://geti2p.net/es/geti2p.net](https://geti2p.net/es/)
-
-## Keybase
-
-Keybase es una plataforma Zero Knowledge Service para mensajería instantánea y almacenar archivos y contraseñas, con encriptación end-to-end.
-
-[![Logo](https://keybase.io/favicon.ico)Keybase](https://keybase.io/)
+- [geti2p.net](https://geti2p.net/es/)
