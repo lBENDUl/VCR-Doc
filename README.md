@@ -38,6 +38,6 @@ Todo el contenido de este blog tiene **fines exclusivamente educativos**. Las t�
 - Plataformas de práctica autorizadas (HackTheBox, TryHackMe, VulnHub)
 - Sistemas con **autorización explícita y por escrito** del propietario
 
-**El uso de estas técnicas sin autorización es ilegal** y puede conllevar responsabilidades penales según el artículo 197 bis y siguientes del Código Penal español.
+**El uso de estas técnicas sin autorización es ilegal** y puede conllevar responsabilidades penales
 
 ---
