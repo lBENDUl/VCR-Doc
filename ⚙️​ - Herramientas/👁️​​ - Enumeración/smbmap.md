@@ -1,26 +1,84 @@
-#Linux #Enumeración 
+# smbmap
 
+smbmap enumera recursos compartidos SMB/Samba y sus permisos de acceso. Es la herramienta ideal para la fase de reconocimiento sobre servicios SMB: muestra qué shares existen, qué nivel de acceso tiene el usuario actual y permite navegar el contenido.
 
-Smbmap es una herramienta de línea de comandos utilizada para enumerar recursos compartidos y permisos en un servidor SMB (Server Message Block) o Samba. Es una herramienta muy útil para la enumeración de redes y para la identificación de posibles vulnerabilidades de seguridad.
+---
 
-Con smbmap, puedes enumerar los recursos compartidos en un servidor SMB y obtener información detallada sobre cada recurso, como los permisos de acceso, los usuarios y grupos autorizados, y los archivos y carpetas compartidos. También puedes utilizar smbmap para identificar recursos compartidos que no requieren autenticación, lo que puede ser un problema de seguridad.
+## Uso básico
 
-Además, smbmap permite a los administradores de sistemas y a los auditores de seguridad verificar rápidamente la configuración de permisos en los recursos compartidos en un servidor SMB, lo que puede ayudar a identificar posibles vulnerabilidades de seguridad y a tomar medidas para remediarlas.
+```bash
+# Sesión anónima
+smbmap -H 192.168.1.10
 
-A continuación, se proporciona una breve descripción de algunos de los parámetros comunes de smbmap:
+# Con credenciales
+smbmap -H 192.168.1.10 -u usuario -p contraseña
 
-- **-H**: Este parámetro se utiliza para especificar la dirección IP o el nombre de host del servidor SMB al que se quiere conectarse.
+# Especificar dominio
+smbmap -H 192.168.1.10 -u usuario -p contraseña -d DOMINIO
+```
 
-- **-P**: Este parámetro se utiliza para especificar el puerto TCP utilizado para la conexión SMB. El puerto predeterminado para SMB es el 445, pero si el servidor SMB está configurado para utilizar un puerto diferente, este parámetro debe ser utilizado para especificar el puerto correcto.
-
-- **-u**: Este parámetro se utiliza para especificar el nombre de usuario para la conexión SMB.
-
-- **-p**: Este parámetro se utiliza para especificar la contraseña para la conexión SMB.
-
-- **-d**: Este parámetro se utiliza para especificar el dominio al que pertenece el usuario que se está utilizando para la conexión SMB.
-
-- **-s**: Este parámetro se utiliza para especificar el recurso compartido específico que se quiere enumerar. Si no se especifica, smbmap intentará enumerar todos los recursos compartidos en el servidor SMB.
+Salida típica:
 
 ```
-smbmap -H 127.0.0.1
+[+] IP: 192.168.1.10:445
+    Disk          Permissions    Comment
+    ----          -----------    -------
+    ADMIN$        NO ACCESS      Remote Admin
+    C$            NO ACCESS      Default share
+    IPC$          READ ONLY      IPC Service
+    datos         READ, WRITE
 ```
+
+---
+
+## Listar contenido de un share
+
+```bash
+# Listar el contenido del share "datos"
+smbmap -H 192.168.1.10 -r datos
+
+# Listar de forma recursiva
+smbmap -H 192.168.1.10 -R datos
+```
+
+---
+
+## Descargar y subir archivos
+
+```bash
+# Descargar archivo
+smbmap -H 192.168.1.10 --download "datos\archivo.txt"
+
+# Subir archivo
+smbmap -H 192.168.1.10 --upload /tmp/shell.php "datos\shell.php"
+```
+
+---
+
+## Ejecutar comandos (si hay permisos)
+
+```bash
+smbmap -H 192.168.1.10 -u admin -p contraseña -x "ipconfig"
+```
+
+---
+
+## Parámetros principales
+
+| Flag | Descripción |
+|---|---|
+| `-H` | IP o hostname del servidor |
+| `-P` | Puerto (por defecto 445) |
+| `-u` | Usuario |
+| `-p` | Contraseña |
+| `-d` | Dominio |
+| `-s` | Share específico a enumerar |
+| `-r` | Listar contenido (un nivel) |
+| `-R` | Listar contenido recursivo |
+
+---
+
+## Ver también
+
+- [smbclient](smbclient.md) — Interacción con el share (descarga, subida, navegación)
+- [SMB](../01-reconocimiento/smb.md) — Protocolo y vectores de explotación
