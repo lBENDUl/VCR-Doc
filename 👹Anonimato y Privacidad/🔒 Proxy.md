@@ -1,3 +1,9 @@
+---
+tags:
+  - Anonimato-Privacidad
+  - Proxy
+---
+
 # Proxy
 
 Un proxy es un servidor intermediario entre el cliente e Internet. El tráfico sale con la IP del proxy en lugar de la IP real del usuario. A diferencia de una VPN, no cifra el tráfico ni actúa a nivel de sistema operativo, sino a nivel de aplicación.
