@@ -1,8 +1,6 @@
 # Guía Completa de Wireshark
 ## Análisis de Tráfico de Red y Captura de Paquetes
 
-**Versión 1.0 - Junio 2024**
-
 ---
 
 ## Introducción
