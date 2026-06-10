@@ -682,68 +682,6 @@ tshark -r captura.pcap -q -z conv,tcp > conversaciones_tcp.txt
 
 ---
 
-## Mejores Prácticas
-
-### Seguridad en Captura
-
-✓ Asegúrate de tener autorización antes de capturar en redes ajenas.
-
-✓ Trata las capturas como datos sensibles (pueden contener contraseñas).
-
-✓ Cifra y asegura archivos de captura (.pcap).
-
-✓ Limpia capturas de datos sensibles antes de compartirlas: utiliza "Anonymize" en File → Export.
-
-✓ No compartas capturas completas en canales inseguros.
-
-### Eficiencia de Captura
-
-✓ Usa filtros de captura para reducir tamaño de archivo.
-
-✓ Limita capturas por tiempo o tamaño de archivo.
-
-✓ Captura en interfaces específicas, no en "promiscuous" innecesariamente.
-
-✓ Para capturas largas, usa multiple files para facilitar análisis posterior.
-
-✓ Documenta qué se capturó y por qué.
-
-### Análisis Efectivo
-
-✓ Comienza con filtros amplios, refina gradualmente.
-
-✓ Usa "Follow Stream" para conversaciones completas, no paquetes aislados.
-
-✓ Revisa Statistics para obtener visión general antes de detalle.
-
-✓ Mantén referencias de comportamiento normal para comparar.
-
-✓ Documenta hallazgos con screenshots y exportaciones.
-
-### Optimización de Rendimiento
-
-✓ Desactiva "Update packet list in real time" para capturas a alta velocidad.
-
-✓ Usa "Capture Options" para limitar número de paquetes mostrados.
-
-✓ Cierra archivos de captura cuando no los uses.
-
-✓ En redes muy ocupadas, aumenta el buffer de captura.
-
-✓ Considera usar filtros de captura agresivos en redes de alto volumen.
-
-### Mantenimiento
-
-✓ Mantén Wireshark actualizado regularmente.
-
-✓ Descarga actualizaciones de GeoIP para análisis de ubicación.
-
-✓ Limpia archivos de captura temporales regularmente.
-
-✓ Organiza capturas por fecha y propósito.
-
----
-
 ## Recursos Adicionales
 
 ### Comandos Útiles de tshark
@@ -783,12 +721,6 @@ http.request.uri ~ "/admin.*\?.*="
 # Múltiples condiciones complejas
 (http.request or http.response) and ip.src == 192.168.1.1 and tcp.port == 80
 ```
-
----
-
-## Conclusión
-
-Wireshark es una herramienta extraordinariamente poderosa para cualquier profesional de redes o seguridad. Su capacidad para capturar y analizar tráfico a nivel de paquete proporciona visibilidad sin igual en lo que realmente ocurre en la red.
 
 Desde diagnósticos básicos de conectividad hasta análisis forense avanzado, Wireshark es indispensable. La práctica continuada con sus filtros, estadísticas y herramientas de análisis permitirá resolver problemas complejos de red de manera eficiente.
 
