@@ -1,12 +1,38 @@
-#Linux #Fuzzing #Certificado 
+# OpenSSL
 
+OpenSSL es una biblioteca de código abierto que implementa los protocolos TLS y SSL. En pentesting se usa principalmente para inspeccionar certificados, probar conexiones cifradas y detectar configuraciones débiles.
 
-Herramientas para inspeccionar el certificado SSL es ‘**Openssl**‘. OpenSSL es una biblioteca de software libre y de código abierto que se utiliza para implementar protocolos de seguridad en línea, como TLS (Transport Layer Security), SSL (Secure Sockets Layer). La biblioteca OpenSSL proporciona una implementación de estos protocolos para permitir que las aplicaciones se comuniquen de manera segura y encriptada a través de la red.
+---
 
-Uno de los comandos que vemos en esta clase haciendo uso de esta herramienta es el siguiente:
+## Inspeccionar certificado SSL de un servidor
 
-```
+```bash
 openssl s_client -connect ejemplo.com:443
 ```
 
-Con este comando, podemos **inspeccionar** el **certificado SSL** de un servidor web. El comando se conecta al servidor en el puerto 443 y muestra información detallada sobre el certificado SSL, como la validez del certificado, la fecha de caducidad, el tipo de cifrado, etc.
+Muestra información detallada del certificado: cadena de confianza, fechas de validez, algoritmo de firma, CN y SANs, cifrado negociado y versión de TLS.
+
+---
+
+## Casos de uso comunes
+
+```bash
+# Ver solo el certificado en formato legible
+openssl s_client -connect ejemplo.com:443 | openssl x509 -noout -text
+
+# Comprobar fecha de expiración
+openssl s_client -connect ejemplo.com:443 2>/dev/null | openssl x509 -noout -dates
+
+# Forzar versión de protocolo (comprobar si acepta TLS 1.0 o 1.1)
+openssl s_client -connect ejemplo.com:443 -tls1
+openssl s_client -connect ejemplo.com:443 -tls1_1
+
+# Obtener el certificado en PEM
+openssl s_client -connect ejemplo.com:443 2>/dev/null | openssl x509 -outform PEM > cert.pem
+```
+
+---
+
+## Ver también
+
+- [sslscan](sslscan.md) — Escaneo automatizado de protocolos y cifrados soportados
