@@ -3,31 +3,92 @@ tags:
   - Protocolo
   - Enumeración
 ---
+# FTP
+
+FTP (File Transfer Protocol) es un protocolo de red para la transferencia de archivos entre cliente y servidor. Habitualmente expuesto en el puerto **21/TCP**. Su principal debilidad es que **transmite credenciales en texto claro**, y muchos servidores permiten acceso anónimo sin autenticación.
+
 ---
 
-FTP es un protocolo ampliamente utilizado para la **transferencia de archivos** en redes. La enumeración del servicio FTP implica recopilar información relevante, como la versión del servidor FTP, la configuración de permisos de archivos, los usuarios y las contraseñas (mediante ataques de fuerza bruta o guessing), entre otros.
+## Puertos
+
+| Puerto | Descripción |
+|---|---|
+| 21/TCP | Canal de control (comandos) |
+| 20/TCP | Canal de datos (transferencia activa) |
+| Dinámico | Canal de datos en modo pasivo |
 
 ---
-
-A continuación, se os proporciona el enlace al primer proyecto que tocamos en esta clase:
-
-- **Docker-FTP-Server**: [https://github.com/garethflowers/docker-ftp-server](https://github.com/garethflowers/docker-ftp-server)
-
-Una de las herramientas que usamos en esta clase para el primer proyecto que nos descargamos es [[🐉​- Hydra]]. Hydra es una herramienta de pruebas de penetración de código abierto que se utiliza para realizar ataques de fuerza bruta contra sistemas y servicios protegidos por contraseña. La herramienta es altamente personalizable y admite una amplia gama de protocolos de red, como HTTP, FTP, SSH, Telnet, SMTP, entre otros.
-
-El siguiente de los proyectos que utilizamos para desplegar el contenedor que permite la autenticación de usuarios invitados para FTP, es el proyecto ‘**docker-anon-ftp**‘ de ‘**metabrainz**‘. A continuación, se os proporciona el enlace al proyecto:
-
-- **Docker-ANON-FTP**: [https://github.com/metabrainz/docker-anon-ftp](https://github.com/metabrainz/docker-anon-ftp)
-
-
-# Pasos para explotar
 
 ## Enumeración
 
-- Visualizar si el usuario por defecto está habilitado (anonymous)
-	- Script con [[👁️‍🗨️​ - NMAP]] `ftp-anon`
+### Detectar versión con Nmap
+
+```bash
+nmap -sV -p 21 <IP>
+nmap -sC -p 21 <IP>
+```
+
+### Comprobar acceso anónimo
+
+```bash
+# Nmap script
+nmap -p 21 --script ftp-anon <IP>
+
+# Manual
+ftp <IP>
+# Usuario: anonymous
+# Contraseña: (vacía o cualquier email)
+```
+
+Si el servidor responde `230 Login successful`, el acceso anónimo está habilitado.
+
+---
+
+## Conexión y comandos básicos
+
+```bash
+ftp <IP>
+
+# Dentro del cliente FTP:
+ls                  # Listar archivos
+get archivo.txt     # Descargar archivo
+put archivo.txt     # Subir archivo
+binary              # Modo binario (para ejecutables, imágenes)
+passive             # Cambiar a modo pasivo
+bye                 # Cerrar sesión
+```
+
+Con `netcat` (útil cuando el cliente ftp no está disponible):
+
+```bash
+nc -nv <IP> 21
+```
+
+---
 
 ## Explotación
 
-- Usuario por defecto habilitado (anonymous)
-- Fuerza bruta con [[🐉​- Hydra]]
+### Fuerza bruta con Hydra
+
+```bash
+hydra -l usuario -P /usr/share/wordlists/rockyou.txt ftp://<IP>
+
+# Con lista de usuarios
+hydra -L usuarios.txt -P passwords.txt ftp://<IP> -t 4
+```
+
+### Acceso anónimo con permisos de escritura
+
+Si se puede escribir en el servidor FTP y hay un servidor web en el mismo host, puede ser posible subir una web shell:
+
+```bash
+ftp <IP>
+put shell.php
+```
+
+---
+
+## Laboratorio de práctica
+
+- [docker-ftp-server](https://github.com/garethflowers/docker-ftp-server) — Servidor FTP con autenticación
+- [docker-anon-ftp](https://github.com/metabrainz/docker-anon-ftp) — Servidor FTP con acceso anónimo
