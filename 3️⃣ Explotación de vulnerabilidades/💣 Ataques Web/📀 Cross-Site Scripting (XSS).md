@@ -1,6 +1,5 @@
 # Cross-Site Scripting (XSS)
 
-> Referencia rápida para pentesting y auditorías de seguridad web. Orientada a uso en entornos autorizados.
 
 ---
 
