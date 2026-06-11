@@ -150,10 +150,3 @@ ffuf -u https://ejemplo.com/FUZZ -w wordlist.txt -ac
 ffuf -u https://ejemplo.com/FUZZ -w wordlist.txt -x http://127.0.0.1:8080
 ```
 
-
-
-
-# Otros
-
-Ayudas de HTB
-[[Attacking_Web_Applications_With_Ffuf_Module_Cheat_Sheet.pdf]] 
