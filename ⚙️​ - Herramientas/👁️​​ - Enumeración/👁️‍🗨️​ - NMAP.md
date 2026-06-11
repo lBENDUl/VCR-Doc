@@ -1,4 +1,4 @@
-# Guía Completa de Nmap
+# Nmap
 ## Enumeración y Reconocimiento de Redes
 
 **Versión 1.0 - Junio 2024**
