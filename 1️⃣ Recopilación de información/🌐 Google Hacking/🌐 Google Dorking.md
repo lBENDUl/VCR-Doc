@@ -1,35 +1,143 @@
-#Linux #Windows  #OSINT
+# Google Dorking
 
-El ‘**Google Dork**‘ es una técnica de búsqueda avanzada que utiliza operadores y palabras clave específicas en el buscador de Google para encontrar información que normalmente no aparece en los resultados de búsqueda regulares.
+> Referencia rápida para OSINT y reconocimiento en auditorías de seguridad. Orientada a uso ético y en entornos autorizados.
 
-La técnica de ‘**Google Dorking**‘ se utiliza a menudo en el hacking para encontrar información sensible y crítica en línea. Es una forma eficaz de recopilar información valiosa de una organización o individuo que puede ser utilizada para realizar pruebas de penetración y otros fines de seguridad.
+---
 
-Al utilizar Google Dorks, un atacante puede buscar información como nombres de usuarios y contraseñas, archivos confidenciales, información de bases de datos, números de tarjetas de crédito y otra información crítica. También pueden utilizar esta técnica para identificar vulnerabilidades en aplicaciones web, sitios web y otros sistemas en línea.
+## ¿Qué es?
 
-Es importante tener en cuenta que la técnica de Google Dorking **no es ilegal en sí misma**, pero puede ser utilizada con fines maliciosos. Por lo tanto, es crucial utilizar esta técnica con responsabilidad y ética en el contexto de la seguridad informática y el hacking ético.
+Google Dorking (o Google Hacking) consiste en usar los operadores de búsqueda avanzada de Google para encontrar información que no aparece en resultados normales: archivos expuestos, paneles de administración, credenciales filtradas, configuraciones incorrectas, etc.
 
-# Filtros
+La técnica en sí no es ilegal, pero el uso malicioso de la información obtenida sí puede serlo. Úsala siempre con autorización explícita sobre el objetivo.
 
-## site:
-Busca en un dominio en concreto
+---
 
-## filetype:
-Busca ficheros con una extensión en concreto
+## Operadores principales
 
-## intext:
-Busca en vez del dominio en concreto que en la entrada si que ponga lo que se le especifique
+### `site:`
+Limita la búsqueda a un dominio o subdominio concreto.
 
+```
+site:ejemplo.com
+site:*.ejemplo.com
+```
 
-# Herramientas Google Dorking
+### `filetype:`
+Busca archivos con una extensión específica.
 
-## Pentest-tools (Web)
+```
+filetype:pdf site:ejemplo.com
+filetype:sql
+filetype:env
+filetype:log
+filetype:xml
+```
 
-A parte de tener muchas funcionalidades para el pentesting, para google Dorking tiene unas platillas para que podemos buscar con ellas (Nos hace el google Dork más eficaz).
-https://pentest-tools.com
+### `inurl:`
+Busca páginas que contengan el término en la URL.
 
-## Exploit Database (Web)
+```
+inurl:admin site:ejemplo.com
+inurl:login
+inurl:wp-admin
+```
 
-Esta página recoge un monton de vulnerabilidades.
-Tiene un apartado específicamente para Google Darling donde podemos ver si hay algunos sitios donde haya información de utilidad.
+### `intitle:`
+Busca páginas donde el término aparezca en el título HTML.
 
-https://www.exploit-db.com/google-hacking-database
+```
+intitle:"index of"
+intitle:"panel de administración"
+```
+
+### `intext:`
+Busca páginas donde el término aparezca en el cuerpo del texto.
+
+```
+intext:"contraseña" filetype:txt
+intext:"DB_PASSWORD" filetype:env
+```
+
+### `"cadena exacta"`
+Las comillas obligan a que la búsqueda sea literal, sin variaciones.
+
+```
+"Index of /" "parent directory"
+```
+
+---
+
+## Dorks útiles por categoría
+
+### Archivos de configuración expuestos
+
+```
+filetype:env DB_PASSWORD
+filetype:ini [database]
+filetype:cfg password
+"wp-config.php" inurl:wp-config
+```
+
+### Paneles de administración
+
+```
+intitle:"phpMyAdmin" inurl:phpmyadmin
+intitle:"RouterOS" inurl:webfig
+inurl:"/admin/login.php"
+inurl:"/wp-admin" site:objetivo.com
+```
+
+### Directorios abiertos
+
+```
+intitle:"index of" "parent directory"
+intitle:"index of" passwd
+intitle:"index of" .git
+```
+
+### Cámaras y dispositivos expuestos
+
+```
+inurl:"/view/index.shtml"
+intitle:"Live View / - AXIS"
+inurl:":8080/web/client"
+```
+
+### Credenciales filtradas
+
+```
+filetype:log "username" "password"
+filetype:sql "INSERT INTO users"
+intext:"password=" filetype:txt
+```
+
+---
+
+## Combinar operadores
+
+Los operadores se pueden combinar para afinar la búsqueda:
+
+```
+site:ejemplo.com filetype:pdf confidencial
+site:ejemplo.com inurl:admin intitle:"login"
+filetype:sql intext:"CREATE TABLE users" site:github.com
+```
+
+---
+
+## Herramientas de apoyo
+
+**[Exploit Database - Google Hacking Database (GHDB)](https://www.exploit-db.com/google-hacking-database)**
+Colección enorme de dorks categorizados por tipo: paneles de administración, archivos sensibles, errores, etc. El punto de partida ideal para conocer qué se puede buscar.
+
+**[Pentest-Tools](https://pentest-tools.com)**
+Plataforma con herramientas de pentesting online. Su módulo de Google Dorking ofrece plantillas predefinidas que hacen las búsquedas más efectivas y eficientes.
+
+---
+
+## Notas de uso ético
+
+- Usar dorks sobre sistemas propios o con autorización escrita del propietario.
+- Google puede bloquear temporalmente IPs que lancen muchas búsquedas automáticas (CAPTCHA).
+- Para automatizar dorks a escala, existen herramientas como `dorkbot` o `googler`, pero requieren especial cuidado legal.
+- La información encontrada mediante dorking puede ser útil en la fase de reconocimiento pasivo de una auditoría, antes de cualquier interacción directa con el objetivo.
