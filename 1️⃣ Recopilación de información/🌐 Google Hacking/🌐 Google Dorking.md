@@ -1,7 +1,5 @@
 # Google Dorking
 
-> Referencia rápida para OSINT y reconocimiento en auditorías de seguridad. Orientada a uso ético y en entornos autorizados.
-
 ---
 
 ## ¿Qué es?
