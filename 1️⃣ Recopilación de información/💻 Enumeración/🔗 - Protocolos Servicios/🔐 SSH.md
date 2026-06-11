@@ -1,30 +1,83 @@
-#Protocolo 
+# SSH
 
+SSH (Secure Shell) es el protocolo estándar para administración remota segura. Usa cifrado asimétrico para la autenticación y cifrado simétrico para la sesión. Es la alternativa segura a Telnet.
 
-SSH es un protocolo de administración remota que permite a los usuarios **controlar** y **modificar** sus servidores remotos a través de Internet mediante un mecanismo de **autenticación seguro**. Como una alternativa más segura al protocolo **Telnet**, que transmite información sin cifrar, SSH utiliza **técnicas criptográficas** para garantizar que todas las comunicaciones hacia y desde el servidor remoto estén cifradas.
-
-SSH proporciona un mecanismo para autenticar un usuario remoto, transferir entradas desde el cliente al host y retransmitir la salida de vuelta al cliente. Esto es especialmente útil para administrar sistemas remotos de manera segura y eficiente, sin tener que estar físicamente presentes en el sitio.
+Puerto por defecto: **22/TCP**.
 
 ---
 
-A continuación, se os proporciona el enlace directo a la web donde copiamos todo el comando de ‘docker’ para desplegar nuestro contenedor:
-
-- **Docker Hub OpenSSH-Server**: [https://hub.docker.com/r/linuxserver/openssh-server](https://hub.docker.com/r/linuxserver/openssh-server)
-
-Cabe destacar que a través de la versión de SSH, también podemos identificar el codename de la distribución que se está ejecutando en el sistema.
-
-Por ejemplo, si la versión del servidor SSH es “**OpenSSH 8.2p1 Ubuntu 4ubuntu0.5**“, podemos determinar que el sistema está ejecutando una distribución de Ubuntu. El número de versión “**4ubuntu0.5**” se refiere a la revisión específica del paquete de SSH en esa distribución de Ubuntu. A partir de esto, podemos identificar el **codename** de la distribución de Ubuntu, que en este caso sería “**Focal**” para Ubuntu 20.04.
-
-Todas estas búsquedas las aplicamos sobre el siguiente dominio:
-
-- **Launchpad**: [https://launchpad.net/ubuntu](https://launchpad.net/ubuntu)
-
-# Pasos para explotar
-
 ## Enumeración
 
-- Buscar la versión para saber a lo que nos enfrentamos con ayuda de **Launchpad**[https://launchpad.net/ubuntu](https://launchpad.net/ubuntu)
+### Detectar versión
+
+```bash
+nmap -sV -p 22 <IP>
+```
+
+La cadena de versión del servidor SSH puede revelar la distribución y versión del SO. Por ejemplo:
+
+```
+OpenSSH 8.2p1 Ubuntu 4ubuntu0.5
+```
+
+El sufijo `4ubuntu0.5` es el número de revisión del paquete en Ubuntu. Se puede buscar el codename en [launchpad.net/ubuntu](https://launchpad.net/ubuntu) para determinar la versión exacta del sistema (en este caso, Ubuntu 20.04 "Focal").
+
+### Scripts Nmap
+
+```bash
+nmap -p 22 --script ssh-auth-methods <IP>
+nmap -p 22 --script ssh-hostkey <IP>
+```
+
+---
+
+## Conexión
+
+```bash
+# Con contraseña
+ssh usuario@<IP>
+
+# Con clave privada
+ssh -i clave.pem usuario@<IP>
+
+# Puerto alternativo
+ssh -p 2222 usuario@<IP>
+```
+
+---
 
 ## Explotación
 
-- Fuerza bruta con [[🐉​- Hydra]]
+### Fuerza bruta con Hydra
+
+```bash
+# Contraseña conocida, buscar usuario
+hydra -L usuarios.txt -p 'Password123' ssh://<IP>
+
+# Usuario conocido, buscar contraseña
+hydra -l admin -P /usr/share/wordlists/rockyou.txt ssh://<IP> -t 4
+```
+
+> ⚠️ Usar `-t 4` para limitar hilos paralelos. SSH suele tener protección contra múltiples conexiones simultáneas (fail2ban, MaxAuthTries).
+
+### Clave privada con permisos débiles encontrada
+
+Si se encuentra una clave privada (`id_rsa`) durante la enumeración:
+
+```bash
+chmod 600 id_rsa
+ssh -i id_rsa usuario@<IP>
+```
+
+Si está protegida con passphrase, crackearla con John:
+
+```bash
+ssh2john id_rsa > hash.txt
+john hash.txt --wordlist=/usr/share/wordlists/rockyou.txt
+```
+
+---
+
+## Laboratorio de práctica
+
+- [linuxserver/openssh-server — Docker Hub](https://hub.docker.com/r/linuxserver/openssh-server)
