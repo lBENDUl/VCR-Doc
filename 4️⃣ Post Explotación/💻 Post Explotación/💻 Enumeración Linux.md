@@ -1,7 +1,5 @@
 # Enumeración Linux — Post-Explotación
 
-> **Guía de referencia rápida** — Comandos para orientarse tras conseguir acceso a un sistema Linux. El objetivo es identificar el contexto, rutas de escalada y credenciales.
-
 ---
 
 ## 1. Orientación inicial
