@@ -1,7 +1,5 @@
 # Extracción de Contraseñas en Windows
 
-> **Guía de referencia rápida** — Técnicas de post-explotación para obtener credenciales en sistemas Windows. Requiere privilegios de administrador local salvo que se indique lo contrario.
-
 ---
 
 ## 1. Volcado de SAM, SYSTEM y SECURITY
