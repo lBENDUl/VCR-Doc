@@ -1,254 +1,404 @@
-#python 
-
-# Introducción
-
-**Tkinter** es una biblioteca estándar de Python para la creación de interfaces gráficas de usuario (GUI). Es una interfaz de programación para ‘**Tk**‘, un toolkit de GUI que es parte de Tcl/Tk. Tkinter es notable por su simplicidad y eficiencia, siendo ampliamente utilizado en aplicaciones de escritorio y herramientas educativas.
-
-**¿Por qué Tkinter?**
-
-- **Facilidad de Uso**: Tkinter es amigable para principiantes. Su estructura sencilla y clara lo hace ideal para aprender los conceptos básicos de la programación de GUI.
-- **Portabilidad**: Las aplicaciones creadas con Tkinter pueden ejecutarse en diversos sistemas operativos sin necesidad de modificar el código.
-- **Amplia Disponibilidad**: Al ser parte de la biblioteca estándar de Python, Tkinter está disponible por defecto en la mayoría de las instalaciones de Python, lo que elimina la necesidad de instalaciones adicionales.
-
-En esta sección del curso, nos sumergiremos en el mundo de Tkinter, empezando con una introducción detallada que nos permitirá entender y utilizar sus múltiples funcionalidades. A través de proyectos prácticos, aplicaremos estos conocimientos para construir desde aplicaciones simples hasta interfaces más complejas, proporcionando una base sólida para cualquiera interesado en el desarrollo de GUI con Python.
+# Python — Tkinter (interfaces gráficas)
 
 
-# Componentes clave
-
-Para empezar a crear la ventana deberemos crearla con tk.TK()
+## Estructura básica de una app
 
 ```python
-import tkinder as tk
+import tkinter as tk
 
+# 1. Crear la ventana principal
 root = tk.Tk()
-```
 
-Ahora root tiene algunas propiedades las cuales sirven para editar la ventana como:
-- title -> Cambia el titulo de la ventana
-- geometry 
-	- - **Descripción**: ‘**geometry()**‘ es una función que define las dimensiones y la posición inicial de la ventana principal.
-	- **Funcionalidad**: Permite especificar el tamaño y la ubicación de la ventana en el formato ‘**ancho x alto + X + Y**‘.
-	- **Importancia**: Es fundamental para establecer el tamaño inicial de la ventana y su posición en la pantalla.
+# 2. Configurar la ventana
+root.title("Mi aplicación")
+root.geometry("800x600")       # ancho x alto
+root.geometry("800x600+100+50") # ancho x alto + posición X + posición Y
+root.resizable(True, True)     # redimensionable (ancho, alto)
+root.minsize(400, 300)         # tamaño mínimo
 
-```python
-import tkinder as tk
-
-root = tk.Tk()
-root.title("Mi ventana")
-root.geometry("800x100")
-```
-
-**1. tk.Label**
-
-- **Descripción**: ‘**tk.Label**‘ es un widget en Tkinter utilizado para mostrar texto o imágenes. El texto puede ser estático o actualizarse dinámicamente.
-- **Uso Común**: Se usa para añadir etiquetas informativas en una GUI, como títulos, instrucciones o información de estado.
-- **Características Clave**:
-    - **text**: Para establecer el texto que se mostrará.
-    - **font**: Para personalizar la tipografía.
-    - **bg y fg**: Para establecer el color de fondo (bg) y de texto (fg).
-    - **image**: Para mostrar una imagen.
-    - **wraplength**: Para especificar a qué ancho el texto debería envolverse.
-
-```python
-label = yk.Label(root, text="Mi primer label", bg="red")
-
+# 3. Añadir widgets...
+label = tk.Label(root, text="¡Hola, mundo!")
 label.pack()
+
+# 4. Iniciar el bucle de eventos (siempre al final)
+root.mainloop()
 ```
 
+---
 
-**2. mainloop()**
+## Layouts (gestores de geometría)
 
-- **Descripción**: ‘**mainloop()**‘ es una función esencial en Tkinter que ejecuta el bucle de eventos de la aplicación. Este bucle espera eventos, como pulsaciones de teclas o clics del mouse, y los procesa.
-- **Importancia**: Sin ‘**mainloop()**‘, la aplicación GUI no responderá a eventos y parecerá congelada. Es lo que mantiene viva la aplicación.
+Hay tres formas de colocar widgets. **No mezclar `pack` y `grid` en el mismo contenedor.**
 
-**3. Layout**
-Hay tres tipos de layout
-- grid()
-- place()
-- pack()
+### `pack()` — Apilado
 
-
-**Conclusión**
-
-Estos componentes de Tkinter (tk.Label, mainloop(), pack(), grid()) son fundamentales para la creación de aplicaciones GUI eficientes y atractivas. Comprender su funcionamiento y saber cómo implementarlos adecuadamente es crucial para cualquier desarrollador que busque crear interfaces de usuario interactivas y funcionales con Python y Tkinter.
-
-# Layouts
-
-## grid()
-
-- **Descripción**: ‘**grid()**‘ es otro método de geometría utilizado en Tkinter para colocar widgets.
-- **Funcionalidad**: Organiza los widgets en una cuadrícula. Se especifica la fila y la columna donde debe ir cada widget.
-- **Características Clave**:
-    - **row y column**: Para especificar la posición del widget en la cuadrícula.
-    - **rowspan y columnspan**: Para permitir que un widget ocupe múltiples filas o columnas.
-    - **sticky**: Para determinar cómo se alinea el widget dentro de su celda (por ejemplo, N, S, E, W).
+Coloca widgets en bloques, uno detrás de otro.
 
 ```python
-label1 = yk.Label(root, text="Mi primer label", bg="red")
-label2 = yk.Label(root, text="Mi primer label", bg="blue")
-label3 = yk.Label(root, text="Mi primer label", bg="green")
+label1 = tk.Label(root, text="Arriba", bg="red")
+label2 = tk.Label(root, text="Abajo", bg="blue")
+label3 = tk.Label(root, text="Izquierda", bg="green")
 
-label1.grid(row=0, column=0)
-label2.grid(row=0, column=1)
-label3.grid(row=1, column=0, columnspan=2)
+label1.pack(side="top", fill="x")           # ocupa todo el ancho
+label2.pack(side="bottom", fill="x")
+label3.pack(side="left", fill="y")          # ocupa todo el alto
+
+# expand=True → el widget ocupa el espacio sobrante
+label1.pack(expand=True, fill="both")       # expande en ambas direcciones
+
+# Padding
+label1.pack(padx=10, pady=5)
 ```
 
-## place()
+### `grid()` — Cuadrícula
 
-- **Descripción**: ‘**place()**‘ es un método de gestión de geometría en Tkinter que permite posicionar widgets en ubicaciones específicas mediante coordenadas x-y.
-- **Características Clave**:
-    - **‘x’ y ‘y’**: Especifican la posición del widget en términos de coordenadas.
-    - **width y height**: Definen el tamaño del widget.
-    - **anchor**: Determina desde qué punto del widget se aplican las coordenadas (por ejemplo, ‘**nw**‘ para esquina superior izquierda).
-    - **Posiciones Relativas**: Se pueden utilizar valores relativos (por ejemplo, ‘**relx**‘, ‘**rely**‘) para posicionar widgets en relación con el tamaño de la ventana, lo que hace que la interfaz sea más adaptable al cambiar el tamaño de la ventana.
+Organiza widgets en filas y columnas. El más recomendado para formularios.
 
 ```python
-label1 = yk.Label(root, text="Mi primer label", bg="red")
-label2 = yk.Label(root, text="Mi primer label", bg="blue")
-label3 = yk.Label(root, text="Mi primer label", bg="green")
+tk.Label(root, text="Nombre:").grid(row=0, column=0, sticky="w", padx=5, pady=5)
+tk.Entry(root).grid(row=0, column=1, padx=5)
 
-label1.place(x=20, y=20)
-label2.place(relx=20, rely=20)
-label3.place(relx=0.5, rely=0.5, anchor=tk.CENTER) # Centrado
+tk.Label(root, text="Email:").grid(row=1, column=0, sticky="w", padx=5, pady=5)
+tk.Entry(root).grid(row=1, column=1, padx=5)
+
+# columnspan → ocupa varias columnas
+tk.Button(root, text="Enviar").grid(row=2, column=0, columnspan=2, pady=10)
+
+# sticky: N, S, E, W o combinaciones (tk.EW = expandir horizontalmente)
+tk.Entry(root).grid(row=0, column=1, sticky="ew")
+
+# Hacer que las columnas se expandan con la ventana
+root.columnconfigure(1, weight=1)
 ```
 
-## pack()
+### `place()` — Posición absoluta o relativa
 
-- **Descripción**: ‘**pack()**‘ es un método de geometría usado para colocar widgets en una ventana.
-- **Funcionalidad**: Organiza los widgets en bloques antes de colocarlos en la ventana. Los widgets se “empaquetan” en el orden en que se llama a ‘**pack()**‘.
-- **Características Clave**:
-    - **side**: Para especificar el lado de la ventana donde se ubicará el widget (por ejemplo, top, bottom, left, right).
-    - **fill**: Para determinar si el widget se expande para llenar el espacio disponible.
-    - **expand**: Para permitir que el widget se expanda para ocupar cualquier espacio adicional en la ventana.
+Control total sobre la posición. Poco flexible al redimensionar.
 
 ```python
-label = yk.Label(root, text="Mi primer label", bg="red")
+label = tk.Label(root, text="Fijo")
+label.place(x=50, y=100)                        # posición absoluta
 
-label.pack(fill="tk.Y", size="tk.LEFT")
+label.place(relx=0.5, rely=0.5, anchor="center")  # centrado en la ventana
+label.place(relx=0.0, rely=0.0, relwidth=0.5)     # ocupa el 50% del ancho
 ```
 
-# Widgets
+---
 
-## Entry()
+## Widgets
 
-- **Descripción**: ‘**tk.Entry()**‘ es un widget en Tkinter que permite a los usuarios introducir una línea de texto.
-- **Uso Común**: Ideal para campos de entrada de texto como nombres de usuario, contraseñas, etc.
-- **Funcionalidades Clave**:
-    - **get()**: Para obtener el texto del campo de entrada.
-    - **delete()**: Para borrar texto del campo de entrada.
-    - **insert()**: Para insertar texto en una posición específica.
-
+### `Label` — Etiqueta de texto o imagen
 
 ```python
-entry_widget = tk.Entry(root)
+label = tk.Label(
+    root,
+    text="Texto del label",
+    font=("Arial", 14, "bold"),
+    fg="white",         # color de texto
+    bg="navy",          # color de fondo
+    wraplength=200,     # ancho máximo antes de saltar de línea
+    justify="left"      # left, center, right
+)
+label.pack(padx=10, pady=10)
 
-entry_widget.pack(pady=5) # padding
+# Actualizar texto en tiempo de ejecución
+label.config(text="Nuevo texto")
 ```
 
-Si queremos que el widget pueda recoger con get() más de una linea tendremos que añadir a dicho método lo siguiente:
+### `Entry` — Campo de texto de una línea
 
 ```python
-def get_data():
-	data = entry_widget.get("1.0", tk.END) # [Linea:Caracter] -> Final
+entry = tk.Entry(root, width=30, show="*")  # show="*" para contraseñas
+entry.pack(padx=10, pady=5)
 
+# Leer valor
+valor = entry.get()
 
-entry_widget = tk.Entry(root)
-button = tk.Button(root, text="Recoger datos de entrada", command=get_data)
+# Escribir valor
+entry.insert(0, "Texto inicial")
 
-entry_widget.pack(pady=5) # padding
-button.pack()
+# Borrar
+entry.delete(0, tk.END)
 
-```
-## Button()
-
-- **Descripción**: ‘**tk.Button()**‘ es un widget que los usuarios pueden presionar para realizar una acción.
-- **Uso Común**: Ejecutar una función o comando cuando se hace clic en él.
-- **Características Clave**:
-    - **text**: Define el texto que aparece en el botón.
-    - **command**: Establece la función que se llamará cuando se haga clic en el botón.
-
-```python
-def get_data():
-	data = entry_widget.get()
-
-button = tk.Button(root, text="Recoger datos de entrada", command=get_data)
-button.pack()
+# Variable vinculada (se actualiza automáticamente)
+var = tk.StringVar()
+entry = tk.Entry(root, textvariable=var)
+print(var.get())
+var.set("Nuevo valor")
 ```
 
-
-## Text()
-
-- **Descripción**: ‘**tk.Text()**‘ es un widget que permite la entrada y visualización de múltiples líneas de texto.
-- **Uso Común**: Ideal para campos de texto más extensos, como áreas de comentarios, editores de texto, etc.
-- **Funcionalidades Clave**:
-    - Similar a ‘**tk.Entry()**‘, pero diseñado para manejar texto de varias líneas.
-    - Permite funciones como copiar, pegar, seleccionar texto.
-
-
-
-## Frame()
-
-- **Descripción**: ‘**Frame()**‘ es un widget en Tkinter utilizado como contenedor para otros widgets.
-- **Uso Común**: Organizar el layout de la aplicación, agrupando widgets relacionados.
-- **Características Clave**:
-    - Actúa como un contenedor invisible que puede contener otros widgets.
-    - Útil para mejorar la organización y la gestión del layout en aplicaciones complejas.
-
+### `Text` — Área de texto multilínea
 
 ```python
-frame = tk.Frame(root, bg="blue", bd=5) # Azul y borde
+texto = tk.Text(root, height=10, width=50, wrap="word")
+texto.pack(padx=10, pady=5)
 
-frame.place(relx=0.5, rely=0.5, anchor.tk.CENTER)
+# Insertar texto
+texto.insert(tk.END, "Línea 1\n")
+texto.insert("1.0", "Al principio\n")  # fila.columna
 
-label1 = tk.Label(frame, text="Mi primer label")
-label1.pack()
+# Leer todo el contenido
+contenido = texto.get("1.0", tk.END)
+
+# Solo la línea 2
+linea = texto.get("2.0", "2.end")
+
+# Borrar todo
+texto.delete("1.0", tk.END)
+
+# Hacer el widget de solo lectura
+texto.config(state="disabled")
+texto.config(state="normal")  # volver a editable
 ```
 
-## Canvas()
-
-- **Descripción**: ‘**Canvas()**‘ es un widget que proporciona un área para dibujar gráficos, líneas, figuras, etc.
-- **Funciones de Dibujo**:
-    - **create_oval()**: Crea figuras ovales o círculos. Los parámetros especifican las coordenadas del rectángulo delimitador.
-    - **create_rectangle()**: Dibuja rectángulos. Los parámetros definen las coordenadas de las esquinas.
-    - **create_line()**: Permite dibujar líneas. Se especifican las coordenadas de inicio y fin de la línea.
-- **Uso Común**: Crear gráficos, interfaces de juegos, o elementos visuales personalizados.
+### `Button` — Botón
 
 ```python
+def al_hacer_clic():
+    print("Clic!")
+    label.config(text="¡Pulsado!")
 
+btn = tk.Button(
+    root,
+    text="Pulsa aquí",
+    command=al_hacer_clic,
+    bg="steelblue",
+    fg="white",
+    font=("Arial", 12),
+    width=15,
+    height=2,
+    relief="raised"   # flat, groove, raised, ridge, solid, sunken
+)
+btn.pack(pady=10)
+
+# Deshabilitar/habilitar
+btn.config(state="disabled")
+btn.config(state="normal")
 ```
 
-## Menu()
+### `Frame` — Contenedor
 
-- **Descripción**: ‘**Menu()**‘ se utiliza para crear menús en una aplicación Tkinter.
-- **Uso Común**: Añadir barras de menús con opciones como ‘**Archivo**‘, ‘**Editar**‘, ‘**Ayuda**‘, etc.
-- **Características Clave**:
-    - Se pueden crear menús desplegables y menús contextuales.
-    - Los menús pueden contener comandos, opciones de selección y otros submenús.
+Agrupa widgets y simplifica el layout. Se pueden anidar.
 
 ```python
+frame = tk.Frame(root, bg="lightgray", bd=2, relief="sunken")
+frame.pack(fill="both", expand=True, padx=10, pady=10)
 
+# Los widgets dentro del frame lo usan como padre
+label = tk.Label(frame, text="Dentro del frame", bg="lightgray")
+label.pack(padx=5, pady=5)
 ```
 
-## messagebox
-
-- **Descripción**: ‘**messagebox**‘ es un módulo en Tkinter que proporciona ventanas emergentes de diálogo.
-- **Funciones Comunes**:
-    - **showinfo(), showwarning(), showerror()**: Muestran mensajes informativos, de advertencia y de error, respectivamente.
-- **Uso Común**: Informar al usuario sobre eventos, confirmaciones, errores o advertencias.
+### `Canvas` — Dibujo y gráficos
 
 ```python
+canvas = tk.Canvas(root, width=400, height=300, bg="white")
+canvas.pack()
 
+# Figuras
+canvas.create_rectangle(50, 50, 200, 150, fill="blue", outline="black")
+canvas.create_oval(220, 50, 370, 150, fill="red")
+canvas.create_line(0, 0, 400, 300, fill="green", width=2)
+canvas.create_polygon(200, 200, 250, 250, 150, 250, fill="yellow")
+
+# Texto en el canvas
+canvas.create_text(200, 280, text="Hola Canvas", font=("Arial", 12))
+
+# Mover un elemento
+rect = canvas.create_rectangle(10, 10, 100, 100, fill="purple")
+canvas.move(rect, 50, 30)
+
+# Eliminar
+canvas.delete(rect)
+canvas.delete("all")  # borrar todo
 ```
 
-## filedialog
-
-- **Descripción**: ‘**filedialog**‘ es un módulo que ofrece diálogos para seleccionar archivos y directorios.
-- **Funciones Clave**:
-    - **askopenfilename()**: Abre un cuadro de diálogo para seleccionar un archivo para abrir.
-    - **asksaveasfilename()**: Abre un cuadro de diálogo para seleccionar la ubicación y el nombre del archivo para guardar.
-    - **askdirectory()**: Permite al usuario seleccionar un directorio.
-- **Uso Común**: Integrar la funcionalidad de apertura y guardado de archivos en aplicaciones.
+### `Menu` — Barra de menú
 
 ```python
+menubar = tk.Menu(root)
 
+# Menú Archivo
+menu_archivo = tk.Menu(menubar, tearoff=0)
+menu_archivo.add_command(label="Nuevo",   command=lambda: print("Nuevo"))
+menu_archivo.add_command(label="Abrir",   command=lambda: print("Abrir"))
+menu_archivo.add_separator()
+menu_archivo.add_command(label="Salir",   command=root.quit)
+
+menubar.add_cascade(label="Archivo", menu=menu_archivo)
+
+# Menú Editar
+menu_editar = tk.Menu(menubar, tearoff=0)
+menu_editar.add_command(label="Copiar",   command=lambda: print("Copiar"))
+menu_editar.add_command(label="Pegar",    command=lambda: print("Pegar"))
+
+menubar.add_cascade(label="Editar", menu=menu_editar)
+
+root.config(menu=menubar)
+```
+
+### `messagebox` — Diálogos de mensaje
+
+```python
+from tkinter import messagebox
+
+messagebox.showinfo("Título",    "Operación completada")
+messagebox.showwarning("Aviso", "Hay un problema")
+messagebox.showerror("Error",   "Algo salió mal")
+
+# Con confirmación (devuelve True/False)
+if messagebox.askyesno("Confirmar", "¿Deseas continuar?"):
+    print("Confirmado")
+
+respuesta = messagebox.askquestion("Pregunta", "¿Guardar cambios?")
+# respuesta es "yes" o "no"
+```
+
+### `filedialog` — Diálogos de archivo
+
+```python
+from tkinter import filedialog
+
+# Seleccionar archivo para abrir
+ruta = filedialog.askopenfilename(
+    title="Selecciona un archivo",
+    filetypes=[("Archivos de texto", "*.txt"), ("Todos", "*.*")]
+)
+
+# Seleccionar ruta para guardar
+ruta_guardado = filedialog.asksaveasfilename(
+    defaultextension=".txt",
+    filetypes=[("Texto", "*.txt")]
+)
+
+# Seleccionar directorio
+directorio = filedialog.askdirectory(title="Selecciona carpeta")
+```
+
+---
+
+## Variables de control
+
+Vinculan widgets a variables Python y se actualizan automáticamente.
+
+```python
+# Tipos
+var_str  = tk.StringVar()
+var_int  = tk.IntVar()
+var_bool = tk.BooleanVar()
+var_dbl  = tk.DoubleVar()
+
+# Leer y escribir
+var_str.get()
+var_str.set("nuevo valor")
+
+# Escuchar cambios
+def al_cambiar(*args):
+    print(f"Nuevo valor: {var_str.get()}")
+
+var_str.trace_add("write", al_cambiar)
+```
+
+### Widgets que usan variables de control
+
+```python
+# Checkbox
+var_check = tk.BooleanVar()
+check = tk.Checkbutton(root, text="Acepto los términos", variable=var_check)
+check.pack()
+print(var_check.get())  # True/False
+
+# Radio buttons
+var_radio = tk.StringVar(value="opcion1")
+tk.Radiobutton(root, text="Opción 1", variable=var_radio, value="opcion1").pack()
+tk.Radiobutton(root, text="Opción 2", variable=var_radio, value="opcion2").pack()
+
+# Combobox (necesita ttk)
+from tkinter import ttk
+combo = ttk.Combobox(root, values=["Rojo", "Verde", "Azul"])
+combo.set("Rojo")
+combo.pack()
+print(combo.get())
+```
+
+---
+
+## Eventos y bindings
+
+```python
+# Click izquierdo
+widget.bind("<Button-1>", lambda e: print("Click izquierdo"))
+
+# Doble click
+widget.bind("<Double-Button-1>", lambda e: print("Doble click"))
+
+# Tecla específica
+root.bind("<Return>", lambda e: print("Enter pulsado"))
+root.bind("<Escape>", lambda e: root.quit())
+
+# Cualquier tecla
+root.bind("<Key>", lambda e: print(f"Tecla: {e.keysym}"))
+
+# Ratón encima / fuera
+widget.bind("<Enter>", lambda e: widget.config(bg="lightblue"))
+widget.bind("<Leave>", lambda e: widget.config(bg="white"))
+
+# Redimensionar ventana
+root.bind("<Configure>", lambda e: print(f"Tamaño: {e.width}x{e.height}"))
+```
+
+---
+
+## Actualizar la UI periódicamente: `after()`
+
+```python
+import time
+
+def actualizar_reloj():
+    hora_actual = time.strftime("%H:%M:%S")
+    label_reloj.config(text=hora_actual)
+    root.after(1000, actualizar_reloj)  # llamar de nuevo en 1000ms
+
+label_reloj = tk.Label(root, font=("Courier", 24))
+label_reloj.pack()
+actualizar_reloj()
+```
+
+---
+
+## Ejemplo completo: formulario básico
+
+```python
+import tkinter as tk
+from tkinter import messagebox
+
+def enviar():
+    nombre = entry_nombre.get().strip()
+    email  = entry_email.get().strip()
+    if not nombre or not email:
+        messagebox.showwarning("Campos vacíos", "Rellena todos los campos")
+        return
+    messagebox.showinfo("Enviado", f"Nombre: {nombre}\nEmail: {email}")
+
+root = tk.Tk()
+root.title("Formulario")
+root.geometry("350x200")
+root.resizable(False, False)
+
+frame = tk.Frame(root, padx=20, pady=20)
+frame.pack(fill="both", expand=True)
+
+tk.Label(frame, text="Nombre:").grid(row=0, column=0, sticky="w", pady=5)
+entry_nombre = tk.Entry(frame, width=25)
+entry_nombre.grid(row=0, column=1, pady=5)
+
+tk.Label(frame, text="Email:").grid(row=1, column=0, sticky="w", pady=5)
+entry_email = tk.Entry(frame, width=25)
+entry_email.grid(row=1, column=1, pady=5)
+
+tk.Button(frame, text="Enviar", command=enviar, bg="steelblue", fg="white", width=20).grid(
+    row=2, column=0, columnspan=2, pady=15
+)
+
+root.mainloop()
 ```
