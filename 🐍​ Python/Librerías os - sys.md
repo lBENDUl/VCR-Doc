@@ -1,7 +1,5 @@
 # Python — Librerías `os` y `sys`
 
-> Referencia rápida para interactuar con el sistema operativo y el intérprete desde Python.
-
 ---
 
 ## Librería `os`
