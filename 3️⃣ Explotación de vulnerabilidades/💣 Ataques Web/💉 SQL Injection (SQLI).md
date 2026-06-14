@@ -1,5 +1,7 @@
 # SQL Injection (SQLi)
 
+> Referencia rápida para pentesting y auditorías de seguridad web. Orientada a uso en entornos autorizados.
+
 ---
 
 ## ¿Qué es?
