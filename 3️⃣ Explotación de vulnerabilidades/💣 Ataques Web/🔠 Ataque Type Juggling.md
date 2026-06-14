@@ -1,189 +1,108 @@
+# Type Juggling
+
+El Type Juggling (o "confusión de tipos") explota el comportamiento de PHP en comparaciones débiles. PHP convierte automáticamente los tipos de datos al comparar valores con `==` (comparación laxa), lo que puede producir resultados inesperados que un atacante puede aprovechar para saltarse la autenticación.
+
 ---
-tags:
-  - Web
-  - Explotacion
-  - Type-Juggling
+
+## Comparación débil vs estricta en PHP
+
+| Operador | Tipo de comparación | Ejemplo |
+|---|---|---|
+| `==` | Laxa (convierte tipos) | `"0e123" == "0e456"` → `true` |
+| `===` | Estricta (tipo + valor) | `"0e123" === "0e456"` → `false` |
+
+La raíz del problema es siempre el uso de `==` donde debería usarse `===`.
+
 ---
 
+## Técnica 1: String → Array (PHP antiguo)
 
-# Notas
+### Condiciones necesarias
 
-Con esta vulnerabilidad lo que buscamos es cambiar el tipo de dato que ingresamos comúnmente en un login para saltarnos este paso.
+- Versión de PHP antigua
+- Comparación de contraseña con `strcmp()` sin validar el tipo de entrada
 
-Esto se realiza de la siguiente manera:
+### Por qué funciona
 
+`strcmp()` en versiones antiguas de PHP devuelve `0` (éxito) cuando uno de los argumentos es un array, en lugar de lanzar un error. Si la condición es `strcmp(...) == 0`, el login se bypasea.
 
-## STRING -> ARRAY (PHP antiguas)
+### Explotación
 
-Condiciones para que se de la vulnerabilidad:
-- Versión de php antigua
-- Entrada de usuario mal comprobada
+Interceptar la petición de login con Burp Suite / Caido y cambiar el parámetro `password` de string a array:
 
-Capturamos la petición y vemos que se esta enviando:
-
-```http
-POST / HTTP/1.1
-Host: 127.0.0.1
-User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:128.0) Gecko/20100101 Firefox/128.0
-Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
-Accept-Language: en-US,en;q=0.5
-Accept-Encoding: gzip, deflate, br, zstd
-Referer: http://127.0.0.1/
-Content-Type: application/x-www-form-urlencoded
-Content-Length: 43
-Origin: http://127.0.0.1
-DNT: 1
-Connection: keep-alive
-Upgrade-Insecure-Requests: 1
-Sec-Fetch-Dest: document
-Sec-Fetch-Mode: navigate
-Sec-Fetch-Site: same-origin
-Sec-Fetch-User: ?1
-Priority: u=0, i
-
-usuario=admin&password=gfdxgdf
+**Petición original:**
+```
+usuario=admin&password=cualquiercosa
 ```
 
-Lo que vamos a realizar es que la entrada del password en vez de ser un `string` que sea un `array` de la siguiente manera:
-
-```http
-POST / HTTP/1.1
-Host: 127.0.0.1
-User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:128.0) Gecko/20100101 Firefox/128.0
-Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
-Accept-Language: en-US,en;q=0.5
-Accept-Encoding: gzip, deflate, br, zstd
-Referer: http://127.0.0.1/
-Content-Type: application/x-www-form-urlencoded
-Content-Length: 43
-Origin: http://127.0.0.1
-DNT: 1
-Connection: keep-alive
-Upgrade-Insecure-Requests: 1
-Sec-Fetch-Dest: document
-Sec-Fetch-Mode: navigate
-Sec-Fetch-Site: same-origin
-Sec-Fetch-User: ?1
-Priority: u=0, i
-
+**Petición modificada:**
+```
 usuario=admin&password[]=
 ```
 
-**Esto nos dará acceso**
+El campo `password` pasa a ser un array vacío. `strcmp([], $PASSWORD)` devuelve `0`, y la condición `== 0` es verdadera → acceso concedido.
 
-## Valor exponencial
+---
 
-Condiciones para que se de la vulnerabilidad:
-- La contraseña en md5 tiene que empezar por 0e
-- La comparativa tiene que tener doble ==
+## Técnica 2: Magic Hashes (valores exponenciales en MD5)
 
-Ingresando valores exponenciales como 0e48762759863w ya que al hacer la comparación va a pasar ya que es igual a 0.
+### Condiciones necesarias
 
-**Strings mágicos que podemos utilizar:**
+- La contraseña se almacena y compara como hash MD5
+- La comparación usa `==` en lugar de `===`
 
-echo -n 240610708 | md5sum
+### Por qué funciona
 
-echo -n QNKCDZO | md5sum
-
-echo -n aabg7XSs | md5sum
-
-
-# Hack4u
-
-Un ataque de **Type Juggling** (o “**cambio de tipo**” en español) es una técnica utilizada en programación para **manipular** el **tipo de dato** de una variable con el fin de engañar a un programa y hacer que éste haga algo que no debería.
-
-La mayoría de los lenguajes de programación utilizan tipos de datos para clasificar la información almacenada en una variable, como enteros, cadenas, flotantes, booleanos, etc. Los programas utilizan estos tipos de datos para realizar operaciones matemáticas, comparaciones y otras tareas específicas. Sin embargo, los atacantes pueden explotar vulnerabilidades en los programas que no validan adecuadamente los tipos de datos que se les proporcionan.
-
-En un ataque de Type Juggling, un atacante manipula los datos de entrada del programa para cambiar el tipo de dato de una variable. Por ejemplo, el atacante podría proporcionar una cadena de caracteres que “se parece” a un número entero, pero que en realidad no lo es. Si el programa no valida adecuadamente el tipo de dato de la variable, podría intentar realizar operaciones matemáticas en esa variable y obtener resultados inesperados.
-
-Un ejemplo común de cómo se puede utilizar un ataque de Type Juggling para burlar la autenticación es en un sistema que utiliza comparaciones de cadena para verificar las contraseñas de los usuarios. En lugar de proporcionar una contraseña válida, el atacante podría proporcionar una cadena que se parece a una contraseña válida, pero que en realidad no lo es.
-
-Por ejemplo, en PHP, una cadena que comienza con un número se convierte automáticamente en un número si se utiliza en una comparación numérica. Por lo tanto, si el atacante proporciona una cadena que comienza con el número **cero** (**0**), como “**00123**“, el programa la convertirá en el número entero **123**.
-
-Aquí se puede ver un ejemplo:
-
-![[Pasted image 20250416135953.png]]
-
-Si la contraseña almacenada en el sistema también se almacena como un número entero (en lugar de como una cadena), la comparación de la contraseña del atacante con la contraseña almacenada podría ser exitosa, lo que permitiría al atacante eludir la autenticación y obtener acceso no autorizado al sistema.
-
-# Laboratorios
-
-## Laboratorio casero
-
-### Contraseña = string
-
-En la ruta /var/www/html creamos un archivo index.php con el siguiente contenido:
+PHP interpreta las cadenas que empiezan por `0e` seguidas de dígitos como notación científica (`0 × 10^N = 0`). Si tanto el hash almacenado como el hash del input empiezan por `0e`, PHP los considera iguales bajo `==`.
 
 ```php
-<html>
-  <font color="red"><center><h1>Secure Login Page</h1></center></font>
-  <hr>
-  <?php echo basename($_SERVER['PHP_SELF']); ?>
-  <body style="background-color:powerblue;">
-    <center>
-      <form method="POST" name="<?php basename($_SERVER['PHP_SELF']); ?>">
-        Usuario: <input type="text" name="usuario" id="usuario" size="30">
-        Password: <input type="password" name="password" id="password" size="30">
-        <input type="submit" value="Login">
-      </form>
-    </center>
-    <hr>
-    <?php
-      $USER = "admin";
-      $PASSWORD = "admin@$$121232";
-
-      if(isset($_POST['usuario']) && isset($_POST['password'])){
-        if($_POST['usuario'] == $USER){
-          if(strcmp($_POST['password'], $PASSWORD) == 0){
-            echo "[+] Acceso garantizado, bienvenido usuario admin";
-          }else{
-            echo "[!] La contraseña proporcionada no es válida";
-          }
-        }else{
-          echo "[!] El usuario introducido no es correcto";
-        }
-      }
-    ?>
-
-  </body>
-</html>
+"0e12345" == "0e67890"  // → true en PHP (ambos son 0 en notación científica)
 ```
 
-### Contraseña = 
+### Strings mágicos cuyo MD5 empieza por 0e
+
+```bash
+echo -n "240610708" | md5sum    # 0e462097431906509019562988736854
+echo -n "QNKCDZO"    | md5sum   # 0e830400451993494058024219903391
+echo -n "aabg7XSs"   | md5sum   # 0e087386482136013740957780965295
+echo -n "aabC9RqS"   | md5sum   # 0e041022518165728065344349536299
+```
+
+Si el hash almacenado en la base de datos empieza por `0e`, cualquiera de estas cadenas como contraseña pasará la validación `==`.
+
+---
+
+## Ejemplo de código vulnerable
 
 ```php
-<html>
-  <font color="red"><center><h1>Secure Login Page</h1></center></font>
-  <hr>
-  <?php echo basename($_SERVER['PHP_SELF']); ?>
-  <body style="background-color:powerblue;">
-    <center>
-      <form method="POST" name="<?php basename($_SERVER['PHP_SELF']); ?>">
-        Usuario: <input type="text" name="usuario" id="usuario" size="30">
-        Password: <input type="password" name="password" id="password" size="30">
-        <input type="submit" value="Login">
-      </form>
-    </center>
-    <hr>
-    <?php
-      $USER = "admin";
-      $PASSWORD = 0e087386482136013740957780965295;
+// VULNERABLE: usa == y strcmp con tipos no validados
+$PASSWORD = 0e087386482136013740957780965295;
 
-      if(!empty($_POST['usuario']) && !empty($_POST['password'])){
-		$password_input = $_POST['password'];
-		$password_input = md5($password_input);
-        if($_POST['usuario'] == $USER){
-          if($password_input == $PASSWORD){
-            echo "[+] Acceso garantizado, bienvenido usuario admin";
-          }else{
-            echo "[!] La contraseña proporcionada no es válida";
-          }
-        }else{
-          echo "[!] El usuario introducido no es correcto";
-        }
-      }
-    ?>
+$password_input = md5($_POST['password']);
 
-  </body>
-</html>
+if ($password_input == $PASSWORD) {
+    // acceso concedido
+}
 ```
+
+```php
+// SEGURO: usa === y validación de tipo
+if ($password_input === $PASSWORD) {
+    // acceso concedido
+}
+```
+
+---
+
+## Laboratorio para practicar
+
+Crear un archivo `/var/www/html/index.php` con el código vulnerable mostrado arriba y probar con los strings mágicos listados. Ver cómo `==` concede acceso mientras que `===` lo deniega.
+
+---
+
+## Mitigaciones
+
+- Usar siempre `===` para comparaciones de contraseñas, hashes y tokens
+- Validar el tipo de los parámetros recibidos antes de procesarlos (`is_string()`, `gettype()`)
+- Usar `password_hash()` y `password_verify()` en PHP moderno, que gestionan todo esto correctamente
+- Actualizar PHP a versiones modernas donde `strcmp()` con arrays lanza advertencias y no devuelve 0
