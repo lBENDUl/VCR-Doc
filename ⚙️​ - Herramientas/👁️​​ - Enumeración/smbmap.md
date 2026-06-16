@@ -34,7 +34,7 @@ Salida típica:
 ## Listar contenido de un share
 
 ```bash
-# Listar el contenido del share "datos"
+# Listar el contenido del share "datos" (un nivel)
 smbmap -H 192.168.1.10 -r datos
 
 # Listar de forma recursiva
@@ -46,19 +46,21 @@ smbmap -H 192.168.1.10 -R datos
 ## Descargar y subir archivos
 
 ```bash
-# Descargar archivo
+# Descargar un archivo concreto
 smbmap -H 192.168.1.10 --download "datos\archivo.txt"
 
-# Subir archivo
+# Subir un archivo
 smbmap -H 192.168.1.10 --upload /tmp/shell.php "datos\shell.php"
 ```
 
 ---
 
-## Ejecutar comandos (si hay permisos)
+## Ejecutar comandos remotos
+
+Si el usuario tiene permisos suficientes (admin):
 
 ```bash
-smbmap -H 192.168.1.10 -u admin -p contraseña -x "ipconfig"
+smbmap -H 192.168.1.10 -u admin -p contraseña -x "whoami"
 ```
 
 ---
@@ -75,10 +77,6 @@ smbmap -H 192.168.1.10 -u admin -p contraseña -x "ipconfig"
 | `-s` | Share específico a enumerar |
 | `-r` | Listar contenido (un nivel) |
 | `-R` | Listar contenido recursivo |
-
----
-
-## Ver también
-
-- [smbclient](smbclient.md) — Interacción con el share (descarga, subida, navegación)
-- [SMB](../01-reconocimiento/smb.md) — Protocolo y vectores de explotación
+| `--download` | Descargar archivo del share |
+| `--upload` | Subir archivo al share |
+| `-x` | Ejecutar comando en el sistema remoto |
