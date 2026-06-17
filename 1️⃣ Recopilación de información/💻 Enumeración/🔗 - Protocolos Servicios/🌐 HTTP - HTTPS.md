@@ -1,4 +1,4 @@
-#Protocolo
+# 🌐 HTTP - HTTPS
 
 **HTTP** (**Hypertext Transfer Protocol**) es un protocolo de comunicación utilizado para la transferencia de datos en la World Wide Web. Se utiliza para la transferencia de contenido de texto, imágenes, videos, hipervínculos, etc. El puerto predeterminado para HTTP es el puerto 80.
 
