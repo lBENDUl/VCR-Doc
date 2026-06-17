@@ -1,4 +1,4 @@
-# Type Juggling
+# 🔠 Type Juggling
 
 El Type Juggling (o "confusión de tipos") explota el comportamiento de PHP en comparaciones débiles. PHP convierte automáticamente los tipos de datos al comparar valores con `==` (comparación laxa), lo que puede producir resultados inesperados que un atacante puede aprovechar para saltarse la autenticación.
 
