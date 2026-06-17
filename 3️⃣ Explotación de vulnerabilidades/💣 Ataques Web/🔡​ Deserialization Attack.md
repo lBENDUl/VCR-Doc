@@ -1,4 +1,4 @@
-# Ataques de Deserialización
+# 🔡 Ataques de Deserialización
 
 La serialización convierte un objeto en una secuencia de bytes para almacenarlo o transmitirlo. La deserialización hace el proceso inverso. Un ataque de deserialización ocurre cuando el atacante puede **modificar el objeto serializado** antes de que la aplicación lo deserialice, alterando el comportamiento del servidor o consiguiendo ejecución de código.
 
