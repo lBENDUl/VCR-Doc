@@ -1,4 +1,4 @@
-# Padding Oracle Attack
+# 📟 Padding Oracle Attack
 
 Un ataque de Padding Oracle permite a un atacante **descifrar datos cifrados sin conocer la clave**, aprovechando que la aplicación revela (a través de su comportamiento) si el relleno de un bloque descifrado es válido o no.
 
