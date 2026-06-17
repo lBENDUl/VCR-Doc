@@ -1,4 +1,4 @@
-# Inyección LDAP (LDAP Injection)
+# 💉 Inyección LDAP (LDAP Injection)
 
 LDAP (*Lightweight Directory Access Protocol*) es un protocolo para acceder y gestionar directorios de información — habitualmente usado para autenticación corporativa y gestión de usuarios (Active Directory, OpenLDAP).
 
