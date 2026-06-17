@@ -1,4 +1,4 @@
-# Guía Completa de Wireshark
+# 🦈 Wireshark
 ## Análisis de Tráfico de Red y Captura de Paquetes
 
 ---
