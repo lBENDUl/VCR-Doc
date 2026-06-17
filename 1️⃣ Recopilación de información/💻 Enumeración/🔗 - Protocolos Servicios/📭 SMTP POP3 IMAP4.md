@@ -1,7 +1,7 @@
 ---
 tags:
 ---
-# SMTP / POP3 / IMAP4
+# 📭 SMTP / POP3 / IMAP4
 
 Los protocolos de correo electrónico son un vector habitual en pentesting: permiten enumerar usuarios válidos, realizar password spraying y, en casos de mala configuración, enviar correos suplantando identidades (open relay).
 
