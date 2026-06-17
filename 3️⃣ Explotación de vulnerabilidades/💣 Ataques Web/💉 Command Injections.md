@@ -1,4 +1,4 @@
-# Command Injection
+# 💉 Command Injection
 
 La inyección de comandos ocurre cuando una aplicación web pasa datos controlados por el usuario a una función del sistema operativo sin sanitizarlos correctamente. El atacante puede ejecutar comandos arbitrarios en el servidor con los privilegios del proceso web.
 
