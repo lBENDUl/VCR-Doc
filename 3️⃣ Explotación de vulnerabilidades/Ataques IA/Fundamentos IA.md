@@ -1,8 +1,5 @@
 # Fundamentos de IA y Machine Learning
 
-> Resumen de los conceptos clave de IA, ML y Deep Learning. Basado en el módulo de Fundamentos de IA de HackTheBox.
-
----
 
 ## 1. IA, ML y Deep Learning — La jerarquía
 
