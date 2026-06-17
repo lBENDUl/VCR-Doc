@@ -1,4 +1,4 @@
-# Server-Side Template Injection (SSTI)
+# 🗞️ Server-Side Template Injection (SSTI)
 
 SSTI es una vulnerabilidad que aparece cuando el input del usuario se embebe directamente en una **plantilla de servidor** sin ser sanitizado. Los motores de plantillas están diseñados para ejecutar código, por lo que si un atacante puede inyectar expresiones en ellos, puede obtener ejecución de código en el servidor.
 
