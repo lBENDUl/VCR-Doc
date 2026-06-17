@@ -1,4 +1,4 @@
-# Remote File Inclusion (RFI)
+# 📁 Remote File Inclusion (RFI)
 
 RFI es una variante de LFI en la que la aplicación no solo incluye archivos locales, sino también **archivos remotos** servidos desde una URL externa. Permite ejecutar código malicioso alojado en el servidor del atacante directamente en el servidor víctima.
 
