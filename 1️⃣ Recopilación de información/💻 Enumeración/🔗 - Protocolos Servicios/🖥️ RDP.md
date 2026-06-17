@@ -2,7 +2,7 @@
 tags:
   - RDP
 ---
-# RDP
+# 🖥️ RDP
 
 RDP (Remote Desktop Protocol) es el protocolo propietario de Microsoft para escritorio remoto. Expone una interfaz gráfica completa del sistema. Puerto por defecto: **3389/TCP**.
 
