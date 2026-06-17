@@ -1,7 +1,7 @@
 ---
 tags:
 ---
-# SQL — MSSQL y MySQL
+# 🛢️ SQL — MSSQL y MySQL
 
 Los servidores de bases de datos SQL son objetivos frecuentes en pentesting por la información que contienen y porque, en caso de inyección o acceso directo, pueden permitir ejecución de comandos del sistema.
 
