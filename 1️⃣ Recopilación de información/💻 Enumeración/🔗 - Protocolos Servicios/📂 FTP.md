@@ -3,7 +3,7 @@ tags:
   - Protocolo
   - Enumeración
 ---
-# FTP
+# 📂 FTP
 
 FTP (File Transfer Protocol) es un protocolo de red para la transferencia de archivos entre cliente y servidor. Habitualmente expuesto en el puerto **21/TCP**. Su principal debilidad es que **transmite credenciales en texto claro**, y muchos servidores permiten acceso anónimo sin autenticación.
 
