@@ -1,4 +1,4 @@
-# DNS
+# 🗄️ DNS
 
 DNS (Domain Name System) es el sistema que traduce nombres de dominio a direcciones IP. Su enumeración en reconocimiento permite descubrir subdominios, servidores de correo, zonas DNS internas y posibles vectores de ataque.
 
