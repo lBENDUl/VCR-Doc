@@ -2,7 +2,7 @@
 tags:
   - Conceptos
 ---
-# Tipos de Payloads
+# 🎫 Tipos de Payloads
 
 Un payload es el código que se ejecuta en el sistema objetivo tras una explotación exitosa. En el contexto de Metasploit y msfvenom, los payloads se clasifican en dos categorías según cómo se entregan.
 
