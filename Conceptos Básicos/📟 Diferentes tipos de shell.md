@@ -1,4 +1,4 @@
-# Diferentes tipos de shell
+# 📟 Diferentes tipos de shell
 
 Cuando se obtiene ejecución remota de código en un sistema, el siguiente paso es establecer una shell que permita interactuar con él. Existen tres tipos principales según la dirección de la conexión y el método utilizado.
 
