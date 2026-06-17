@@ -1,4 +1,4 @@
-# SSH
+# 🔐 SSH
 
 SSH (Secure Shell) es el protocolo estándar para administración remota segura. Usa cifrado asimétrico para la autenticación y cifrado simétrico para la sesión. Es la alternativa segura a Telnet.
 
