@@ -1,4 +1,4 @@
-# XML External Entity Injection (XXE)
+# 💿 XML External Entity Injection (XXE)
 
 XXE es una vulnerabilidad que afecta a aplicaciones que procesan XML. Si el parser XML está mal configurado, un atacante puede definir **entidades externas** que hacen que el servidor lea archivos locales, realice peticiones a servicios internos (SSRF) o, en casos extremos, ejecute comandos.
 
