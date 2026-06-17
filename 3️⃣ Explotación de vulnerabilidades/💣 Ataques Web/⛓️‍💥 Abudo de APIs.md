@@ -1,4 +1,4 @@
-# Abuso de APIs REST
+# ⛓️‍💥 Abuso de APIs REST
 
 Una **API** (*Application Programming Interface*) es un conjunto de endpoints que permiten la comunicación entre aplicaciones. Las APIs REST son las más comunes en entornos web actuales y, cuando están mal aseguradas, presentan una superficie de ataque significativa.
 
