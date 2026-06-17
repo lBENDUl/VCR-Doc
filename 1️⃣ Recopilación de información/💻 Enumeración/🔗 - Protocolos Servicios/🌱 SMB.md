@@ -1,4 +1,4 @@
-# SMB
+# 🌱 SMB
 
 SMB (Server Message Block) es el protocolo de Microsoft para compartir archivos, impresoras y recursos en red. **Samba** es su implementación libre para sistemas Unix/Linux. Es uno de los servicios más frecuentes en redes Windows y uno de los más explotados históricamente (EternalBlue, MS17-010, EternalRed/CVE-2017-7494).
 
