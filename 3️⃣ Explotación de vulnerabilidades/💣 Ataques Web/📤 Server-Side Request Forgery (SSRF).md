@@ -1,4 +1,4 @@
-# Server-Side Request Forgery (SSRF)
+# 📤 Server-Side Request Forgery (SSRF)
 
 SSRF es una vulnerabilidad que permite al atacante forzar al servidor web a realizar peticiones HTTP en su nombre. El servidor actúa como proxy involuntario, permitiendo acceder a recursos internos que no son accesibles desde el exterior.
 
