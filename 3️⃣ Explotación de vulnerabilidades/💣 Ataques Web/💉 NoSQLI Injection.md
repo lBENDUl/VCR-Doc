@@ -1,4 +1,4 @@
-# NoSQL Injection (NoSQLi)
+# 💉 NoSQL Injection (NoSQLi)
 
 La inyección NoSQL afecta a aplicaciones que usan bases de datos no relacionales como **MongoDB**, **CouchDB**, **Cassandra** o **FirebaseDB**. En lugar de manipular consultas SQL, se explotan los operadores y la estructura de consultas propios de estas bases de datos.
 
