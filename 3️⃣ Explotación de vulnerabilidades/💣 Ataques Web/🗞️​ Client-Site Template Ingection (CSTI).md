@@ -1,4 +1,4 @@
-# Client-Side Template Injection (CSTI)
+# 🗞️ Client-Side Template Injection (CSTI)
 
 CSTI es la variante del lado del cliente de SSTI. En lugar de inyectar código en una plantilla que procesa el servidor, el atacante inyecta código en una plantilla que procesa el **navegador del usuario**. Frameworks de frontend como AngularJS evalúan expresiones en el DOM, lo que crea esta superficie de ataque.
 
