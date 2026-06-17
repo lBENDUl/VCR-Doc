@@ -1,4 +1,4 @@
-# Cross-Site Request Forgery (CSRF)
+# 📤 Cross-Site Request Forgery (CSRF)
 
 CSRF es un ataque que engaña al navegador de un usuario autenticado para que realice peticiones no deseadas a una aplicación web en su nombre. El servidor recibe la petición con las credenciales legítimas de la víctima (cookies de sesión) y la procesa como si fuera una acción voluntaria del usuario.
 
