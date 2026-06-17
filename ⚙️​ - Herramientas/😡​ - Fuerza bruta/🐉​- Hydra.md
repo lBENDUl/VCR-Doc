@@ -1,4 +1,4 @@
-# Hydra
+# 🐉 Hydra
 
 Hydra es una herramienta de fuerza bruta para servicios de autenticación en red. Soporta SSH, FTP, HTTP, SMB, RDP, MySQL y decenas de protocolos más.
 
