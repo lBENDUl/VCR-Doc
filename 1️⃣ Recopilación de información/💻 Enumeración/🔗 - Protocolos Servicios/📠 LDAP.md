@@ -2,8 +2,9 @@
 tags:
   - Enumeración
 ---
+# 📠 LDAP
 
-`LDAP` (Lightweight Directory Access Protocol) es `a protocol` usado para `access and manage directory information`. A `directory` es a `hierarchical data store` que contiene información sobre recursos de red como `users`, `groups`, `computers`, `printers`, y otros dispositivos. LDAP proporciona una excelente funcionalidad:
+`LDAP` (Lightweight Directory Access Protocol) es un protocolo usado para `access and manage directory information`. A `directory` es a `hierarchical data store` que contiene información sobre recursos de red como `users`, `groups`, `computers`, `printers`, y otros dispositivos. LDAP proporciona una excelente funcionalidad:
 
 | **Funcionalidad**         | **Descripción**                                                                                                                                                                                                                  |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
