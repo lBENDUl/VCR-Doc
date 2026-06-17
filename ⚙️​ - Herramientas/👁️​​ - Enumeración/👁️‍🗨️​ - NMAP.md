@@ -1,4 +1,4 @@
-# Nmap — Guía de referencia
+# 👁️‍🗨️ Nmap
 
 > Referencia rápida para reconocimiento y enumeración de redes en auditorías de seguridad. Orientada a uso en entornos autorizados.
 
