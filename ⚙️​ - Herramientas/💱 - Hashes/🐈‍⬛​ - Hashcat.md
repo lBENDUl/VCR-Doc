@@ -1,4 +1,4 @@
-# Hashcat
+# 🐈‍⬛ Hashcat
 
 Hashcat es la herramienta de cracking de hashes más rápida disponible. Aprovecha la GPU para realizar ataques de fuerza bruta, diccionario, y reglas a velocidades muy superiores a las herramientas basadas en CPU.
 
