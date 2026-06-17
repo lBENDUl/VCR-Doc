@@ -1,4 +1,4 @@
-# PadBuster
+# 📟 PadBuster
 
 PadBuster es una herramienta de línea de comandos diseñada para explotar vulnerabilidades de **Padding Oracle**. Permite descifrar cookies o tokens cifrados con CBC y, una vez conocido el texto plano, forjar nuevos valores cifrados.
 
