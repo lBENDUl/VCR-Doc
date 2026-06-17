@@ -1,4 +1,4 @@
-# Inyección LaTeX (LaTeX Injection)
+# 💉 Inyección LaTeX (LaTeX Injection)
 
 LaTeX es un sistema de composición tipográfica muy usado en publicaciones académicas y científicas. Algunas aplicaciones web permiten a los usuarios escribir texto en formato LaTeX para generar PDFs u otros documentos.
 
