@@ -1,4 +1,4 @@
-# Docker
+# 🐋 Docker
 
 Docker permite crear, distribuir y ejecutar aplicaciones en contenedores aislados. En ciberseguridad se usa habitualmente para desplegar entornos de laboratorio vulnerables de forma rápida y limpia.
 
